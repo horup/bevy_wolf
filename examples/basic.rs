@@ -1,5 +1,8 @@
-use bevy::prelude::*;
-use bevy_wolf::WolfPlugin;
+use bevy::{prelude::*};
+use bevy_wolf::{
+    components::{Cam, SpawnVariant, Spawn},
+    WolfPlugin,
+};
 
 fn main() {
     App::new()
@@ -9,6 +12,8 @@ fn main() {
         .run();
 }
 
-fn startup_system() {
-    
+fn startup_system(mut commands: Commands) {
+    commands.spawn(Spawn {
+        variant: SpawnVariant::Cam { cam: Cam { pos: (1.0, -10.0, 1.0).into(), yaw: 0.0 } },
+    });
 }
