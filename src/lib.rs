@@ -2,7 +2,6 @@ pub mod components;
 pub mod systems;
 
 use bevy::prelude::*;
-#[derive(Default)]
 pub struct WolfPlugin;
 
 impl Plugin for WolfPlugin {
