@@ -1,13 +1,13 @@
-use std::f32::consts::PI;
 
-use bevy::{prelude::*, transform::commands};
+
+use bevy::{prelude::*};
 
 use crate::components::{Cam, Spawn};
 
 pub fn startup_system(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    _commands: Commands,
+    _meshes: ResMut<Assets<Mesh>>,
+    _materials: ResMut<Assets<StandardMaterial>>,
 ) {
 }
 
@@ -26,7 +26,7 @@ pub fn spawn_cam_system(mut commands: Commands, spawns: Query<(Entity, &Spawn<Ca
     }
 }
 
-pub fn debug_gizmos_system(mut gizmos: Gizmos, time: Res<Time>) {
+pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
     // draw origin
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into(), Color::BLUE);
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 1.0, 0.0).into(), Color::GREEN);
