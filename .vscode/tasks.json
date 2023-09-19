@@ -8,7 +8,7 @@
 			"problemMatcher": [
 				"$rustc"
 			],
-			"label": "rust: cargo run"
+			"label": "rust: cargo run basic"
 		}
 	]
 }
