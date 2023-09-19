@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::assets::TMXMap;
+use crate::assets::WolfMap;
 
 #[derive(Component, Clone)]
 pub struct Spawn<T : Clone> {
@@ -27,5 +27,5 @@ pub struct Thing {
 #[derive(Component, Default, Clone)]
 pub struct Map {
     pub map_path:String,
-    pub handle:Option<Handle<TMXMap>>
+    pub handle:Option<Handle<WolfMap>>
 }

@@ -1,4 +1,4 @@
-use crate::{components::{Cam, Map, Spawn}, assets::TMXMap};
+use crate::{components::{Cam, Map, Spawn}, assets::WolfMap};
 use bevy::prelude::*;
 
 pub fn startup_system(
@@ -32,7 +32,7 @@ pub fn spawn_map_system(
     ass: Res<AssetServer>,
 ) {
     for (e, spawn) in spawns.iter() {
-        let handle:Handle<TMXMap> = ass.load(&spawn.variant.map_path);
+        let handle:Handle<WolfMap> = ass.load(&spawn.variant.map_path);
     }
 }
 
