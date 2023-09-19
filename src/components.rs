@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::assets::TMXMap;
+
 #[derive(Component, Clone)]
 pub struct Spawn<T : Clone> {
     pub variant:T
@@ -20,4 +22,10 @@ pub struct Cam {
 #[derive(Component, Default, Clone)]
 pub struct Thing {
     pub pos: Vec3,
+}
+
+#[derive(Component, Default, Clone)]
+pub struct Map {
+    pub map_path:String,
+    pub handle:Option<Handle<TMXMap>>
 }
