@@ -1,15 +1,14 @@
-
 use bevy::{
     asset::AssetLoader,
     prelude::*,
     reflect::{TypePath, TypeUuid},
 };
 
-#[derive(TypeUuid, TypePath, Debug)]
+#[derive(TypeUuid, TypePath, Debug, Clone)]
 #[uuid = "8a6ed18a-13d6-45b1-8ba7-ede1b13500c5"]
 pub struct WolfMap {
-    pub width:u32,
-    pub height:u32
+    pub width: u32,
+    pub height: u32,
 }
 
 #[derive(Default)]
@@ -23,7 +22,10 @@ impl<'a> tiled::ResourceReader for BytesReader<'a> {
 
     type Error = std::io::Error;
 
-    fn read_from(&mut self, _: &std::path::Path) -> std::result::Result<Self::Resource, Self::Error> {
+    fn read_from(
+        &mut self,
+        _: &std::path::Path,
+    ) -> std::result::Result<Self::Resource, Self::Error> {
         Ok(self.bytes)
     }
 }
@@ -35,16 +37,15 @@ impl AssetLoader for WolfMapAssetLoader {
         load_context: &'a mut bevy::asset::LoadContext,
     ) -> bevy::utils::BoxedFuture<'a, Result<(), bevy::asset::Error>> {
         Box::pin(async move {
-            let mut loader = 
-            tiled::Loader::with_cache_and_reader(
+            let mut loader = tiled::Loader::with_cache_and_reader(
                 tiled::DefaultResourceCache::default(),
                 BytesReader { bytes },
             );
             let tiled_map = loader.load_tmx_map(load_context.path()).unwrap();
 
             let wmap = WolfMap {
-                width:tiled_map.width,
-                height:tiled_map.height
+                width: tiled_map.width,
+                height: tiled_map.height,
             };
             dbg!(&wmap);
             Ok(())
