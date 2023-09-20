@@ -1,8 +1,5 @@
-use bevy::{prelude::*};
-use bevy_wolf::{
-    components::{Cam, Spawn},
-    WolfPlugin,
-};
+use bevy::prelude::*;
+use bevy_wolf::*;
 
 fn main() {
     App::new()
@@ -12,9 +9,6 @@ fn main() {
         .run();
 }
 
-fn startup_system(mut commands: Commands) {
-    commands.spawn(Spawn::new(Cam {
-        pos: (2.0, -10.0, 1.0).into(),
-        yaw: 0.0,
-    }));
+fn startup_system(mut world:ResMut<WolfWorld>, ass:Res<AssetServer>, ) {
+    world.load_map(ass.load("maps/basic.tmx"));
 }

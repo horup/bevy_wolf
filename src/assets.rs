@@ -1,30 +1,42 @@
+use array2d::Array2D;
 use bevy::{
     asset::{AssetLoader, LoadedAsset},
     prelude::*,
-    reflect::{TypePath, TypeUuid}, utils::HashMap,
+    reflect::{TypePath, TypeUuid},
+    utils::HashMap,
 };
-use array2d::Array2D;
 
 #[derive(Clone, Debug)]
-pub struct WolfMapEntity {
-    pub name:String,
-    pub pos:Vec3
+pub struct WolfMapThing {
+    pub name: String,
+    pub pos: Vec3,
 }
-
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct WolfMapTile {
-    pub texture:String
+    pub texture: String,
 }
 
 #[derive(TypeUuid, TypePath, Debug, Clone)]
 #[uuid = "8a6ed18a-13d6-45b1-8ba7-ede1b13500c5"]
 pub struct WolfMap {
-    pub entities:Vec<WolfMapEntity>,
-    pub walls:Array2D<Option<u32>>,
-    pub tileset:HashMap<u32, WolfMapTile>,
+    pub thing: Vec<WolfMapThing>,
+    pub walls: Array2D<Option<u32>>,
+    pub tileset: HashMap<u32, WolfMapTile>,
     pub width: u32,
     pub height: u32,
+}
+
+impl Default for WolfMap {
+    fn default() -> Self {
+        Self {
+            thing: Default::default(),
+            walls: Array2D::filled_with(None, 1, 1),
+            tileset: Default::default(),
+            width: Default::default(),
+            height: Default::default(),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -60,19 +72,22 @@ impl AssetLoader for WolfMapAssetLoader {
             let tiled_map = loader.load_tmx_map(load_context.path()).unwrap();
             let width = tiled_map.width;
             let height = tiled_map.height;
-            let mut walls = Array2D::filled_with(None, tiled_map.height as usize, tiled_map.width as usize);
+            let mut walls =
+                Array2D::filled_with(None, tiled_map.height as usize, tiled_map.width as usize);
             let mut tileset_map = HashMap::new();
             let mut entities = Vec::new();
             for layer in tiled_map.layers() {
                 if let Some(tiled_tile_layer) = layer.as_tile_layer() {
                     for y in 0..height {
                         for x in 0..width {
-                            if let Some(tiled_layer_tile) = tiled_tile_layer.get_tile(x as i32, y as i32) {
+                            if let Some(tiled_layer_tile) =
+                                tiled_tile_layer.get_tile(x as i32, y as i32)
+                            {
                                 if let Some(tiled_tile) = tiled_layer_tile.get_tile() {
                                     if let Some(img) = &tiled_tile.image {
                                         if let Some(stem) = img.source.file_stem() {
                                             let wolf_tile = WolfMapTile {
-                                                texture:stem.to_string_lossy().into()
+                                                texture: stem.to_string_lossy().into(),
                                             };
                                             let id = match tileset_map.get(&wolf_tile) {
                                                 Some(id) => *id as u32,
@@ -84,7 +99,9 @@ impl AssetLoader for WolfMapAssetLoader {
                                             };
                                             // swap such that y is up instead of down
                                             let y = height - y - 1;
-                                            walls.set(x as usize, y as usize, Some(id)).expect("failed to set WolfMap.walls");
+                                            walls
+                                                .set(x as usize, y as usize, Some(id))
+                                                .expect("failed to set WolfMap.walls");
                                         }
                                     }
                                 }
@@ -94,7 +111,7 @@ impl AssetLoader for WolfMapAssetLoader {
                 }
                 if let Some(tiled_object_layer) = layer.as_object_layer() {
                     for obj in tiled_object_layer.objects() {
-                        entities.push(WolfMapEntity {
+                        entities.push(WolfMapThing {
                             name: obj.name.clone(),
                             pos: Vec3::new(obj.x, obj.y, 0.0),
                         });
@@ -107,7 +124,7 @@ impl AssetLoader for WolfMapAssetLoader {
                 tileset.insert(id, tile);
             }
             let wolf_map = WolfMap {
-                entities,
+                thing: entities,
                 walls,
                 tileset,
                 width,
@@ -123,7 +140,7 @@ impl AssetLoader for WolfMapAssetLoader {
     }
 }
 
-pub fn build(app: &mut App) {
+pub fn build_assets(app: &mut App) {
     app.add_asset::<WolfMap>();
     app.init_asset_loader::<WolfMapAssetLoader>();
 }

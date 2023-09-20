@@ -12,12 +12,19 @@ impl<T : Clone> Spawn<T> {
 }
 
 #[derive(Component, Clone, Default)]
-pub struct Cam {
-    pub pos: Vec3,
+pub struct WolfCamera {
     pub yaw: f32,
 }
 
 #[derive(Component, Default, Clone)]
-pub struct Thing {
-    pub pos: Vec3,
+pub struct WolfThing {
+    pub pos:Vec3,
 }
+
+#[derive(Component, Default, Clone)]
+pub struct WolfTile {
+    pub pos:UVec2
+}
+
+#[derive(Component, Default, Clone)]
+pub struct WolfEntity;
