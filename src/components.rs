@@ -28,3 +28,7 @@ pub struct WolfTile {
 
 #[derive(Component, Default, Clone)]
 pub struct WolfEntity;
+
+
+#[derive(Component)]
+pub struct WolfUIFPSText;

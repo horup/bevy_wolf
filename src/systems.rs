@@ -1,18 +1,31 @@
 use crate::{
     assets::WolfMap,
-    components::{Spawn, WolfCamera},
+    components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, WolfAssets, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld, WolfConfig,
 };
 
 use bevy::{prelude::*, utils::petgraph::dot::Config};
 
-pub fn startup_system(ass: Res<AssetServer>, mut assets: ResMut<WolfAssets>) {
+pub fn startup_system(mut commands:Commands, ass: Res<AssetServer>, mut assets: ResMut<WolfAssets>) {
     assets
         .meshes
         .insert("block", ass.load("meshes/block.gltf#Mesh0/Primitive0"));
     assets
         .meshes
         .insert("floor", ass.load("meshes/floor.gltf#Mesh0/Primitive0"));
+
+    commands.spawn(TextBundle {
+        text:Text::from_section("Hello World", TextStyle {
+            font_size:24.0,
+            color:Color::RED,
+            ..Default::default()
+        }),
+        ..Default::default()
+    }).insert(WolfUIFPSText);
+}
+
+fn ui_system(mut q:Query<&mut Text, With<WolfUIFPSText>>, time:Res<Time>) {
+    q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
 }
 
 pub fn spawn_cam_system(
@@ -31,6 +44,8 @@ pub fn spawn_cam_system(
             })
             .insert(cam.clone());
     }*/
+
+
 }
 
 pub fn tile_spawn_system(
@@ -164,7 +179,7 @@ pub fn build_systems(app: &mut App) {
     app.add_systems(PreUpdate, (load_map_system).chain());
     app.add_systems(
         Update,
-        (spawn_cam_system, tile_spawn_system, camera_system).chain(),
+        (spawn_cam_system, tile_spawn_system, camera_system, ui_system).chain(),
     );
     app.add_systems(PostUpdate, debug_gizmos_system);
 }
