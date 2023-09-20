@@ -20,7 +20,7 @@ pub struct WolfMapTile {
 #[derive(TypeUuid, TypePath, Debug, Clone)]
 #[uuid = "8a6ed18a-13d6-45b1-8ba7-ede1b13500c5"]
 pub struct WolfMap {
-    pub thing: Vec<WolfMapThing>,
+    pub things: Vec<WolfMapThing>,
     pub walls: Array2D<Option<u32>>,
     pub tileset: HashMap<u32, WolfMapTile>,
     pub width: u32,
@@ -30,7 +30,7 @@ pub struct WolfMap {
 impl Default for WolfMap {
     fn default() -> Self {
         Self {
-            thing: Default::default(),
+            things: Default::default(),
             walls: Array2D::filled_with(None, 1, 1),
             tileset: Default::default(),
             width: Default::default(),
@@ -111,9 +111,13 @@ impl AssetLoader for WolfMapAssetLoader {
                 }
                 if let Some(tiled_object_layer) = layer.as_object_layer() {
                     for obj in tiled_object_layer.objects() {
+                        let mut pos = Vec3::new(obj.x, obj.y, 0.0);
+                        pos.x /= tiled_map.tile_width as f32;
+                        pos.y /= tiled_map.tile_height as f32;
+                        pos.y = tiled_map.height as f32 - 1.0 - pos.y;
                         entities.push(WolfMapThing {
                             name: obj.name.clone(),
-                            pos: Vec3::new(obj.x, obj.y, 0.0),
+                            pos,
                         });
                     }
                 }
@@ -124,7 +128,7 @@ impl AssetLoader for WolfMapAssetLoader {
                 tileset.insert(id, tile);
             }
             let wolf_map = WolfMap {
-                thing: entities,
+                things: entities,
                 walls,
                 tileset,
                 width,
