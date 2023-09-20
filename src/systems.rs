@@ -1,10 +1,10 @@
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera},
-    AssetMap, WolfAssets, WolfEntity, WolfTile, WolfTileBundle, WolfWorld,
+    AssetMap, WolfAssets, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld, WolfConfig,
 };
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::petgraph::dot::Config};
 
 pub fn startup_system(ass: Res<AssetServer>, mut assets: ResMut<WolfAssets>) {
     assets
@@ -110,7 +110,8 @@ fn load_map_system(
                         .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 })
-                .insert(WolfEntity);
+                .insert(WolfEntity)
+                .insert(WolfCamera::default());
         }
     }
 
@@ -124,6 +125,33 @@ fn load_map_system(
     .insert(WolfEntity);*/
 }
 
+pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys:Res<Input<KeyCode>>, time:Res<Time>, config:Res<WolfConfig>) {
+    for (wcamera, mut transform) in cameras.iter_mut() {
+        let mut v = Vec3::new(0.0, 0.0, 0.0);
+      
+        if keys.pressed(config.forward_key) {
+            v.y = 1.0;
+        }
+        if keys.pressed(config.backward_key) {
+            v.y -= 1.0;
+        }
+        if keys.pressed(config.strife_left_key) {
+            v.x -= 1.0;
+        }
+        if keys.pressed(config.strife_right_key) {
+            v.x += 1.0;
+        }
+        let v = v.normalize_or_zero();
+        let forward = transform.forward();
+        let side = -Vec3::new(-forward.y, forward.x, 0.0);
+        let dt = time.delta_seconds();
+        let speed = 10.0;
+        transform.translation += forward * v.y * dt * speed;
+        transform.translation += side * v.x * dt * speed;
+        break;
+    }
+}
+
 pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
     // draw origin
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into(), Color::BLUE);
@@ -134,6 +162,9 @@ pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
     app.add_systems(PreUpdate, (load_map_system).chain());
-    app.add_systems(Update, (spawn_cam_system, tile_spawn_system).chain());
+    app.add_systems(
+        Update,
+        (spawn_cam_system, tile_spawn_system, camera_system).chain(),
+    );
     app.add_systems(PostUpdate, debug_gizmos_system);
 }

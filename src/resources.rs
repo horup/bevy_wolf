@@ -50,10 +50,30 @@ impl<T: TypeUuid + TypePath + Send + Sync> AssetMap<T> {
 pub struct WolfAssets {
     pub meshes: AssetMap<Mesh>,
     pub standard_materials: AssetMap<StandardMaterial>,
-    pub images: AssetMap<Image>
+    pub images: AssetMap<Image>,
+}
+
+#[derive(Resource)]
+pub struct WolfConfig {
+    pub forward_key: KeyCode,
+    pub backward_key: KeyCode,
+    pub strife_left_key: KeyCode,
+    pub strife_right_key: KeyCode,
+}
+
+impl Default for WolfConfig {
+    fn default() -> Self {
+        Self {
+            forward_key: KeyCode::W,
+            backward_key: KeyCode::S,
+            strife_left_key: KeyCode::A,
+            strife_right_key: KeyCode::D,
+        }
+    }
 }
 
 pub fn build_resources(app: &mut App) {
     app.init_resource::<WolfWorld>();
     app.init_resource::<WolfAssets>();
+    app.init_resource::<WolfConfig>();
 }

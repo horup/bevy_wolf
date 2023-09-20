@@ -13,7 +13,6 @@ impl<T : Clone> Spawn<T> {
 
 #[derive(Component, Clone, Default)]
 pub struct WolfCamera {
-    pub yaw: f32,
 }
 
 #[derive(Component, Default, Clone)]
