@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::{*, PluginGroup}, utils::HashMap, reflect::{TypeUuid, TypePath}};
 
 use crate::WolfMap;
 
@@ -14,6 +14,36 @@ impl WolfWorld {
     }
 }
 
+pub struct AssetMap<T:TypeUuid + TypePath + Send + Sync> {
+    assets:HashMap<String, Handle<T>>,
+}
+
+impl<T:TypeUuid + TypePath + Send + Sync> Default for AssetMap<T> {
+    fn default() -> Self {
+        Self { assets: Default::default() }
+    }
+}
+
+impl<T:TypeUuid + TypePath + Send + Sync> AssetMap<T> {
+    pub fn add(&mut self, name:&str, handle:Handle<T>) {
+        self.assets.insert(name.to_string(), handle);
+    }
+    pub fn get(&self, name:&str) -> Option<Handle<T>> {
+        let Some(h) = self.assets.get(name) else {
+            return None;
+        };
+
+        Some(h.clone())
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct WolfAssets {
+    pub meshes:AssetMap<Mesh>,
+    pub standard_materials:AssetMap<StandardMaterial>
+}
+
 pub fn build_resources(app:&mut App) {
-    app.insert_resource(WolfWorld::default());
+    app.init_resource::<WolfWorld>();
+    app.init_resource::<WolfAssets>();
 }

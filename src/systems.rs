@@ -1,23 +1,23 @@
 use crate::{
     assets::WolfMap,
-    components::{WolfCamera, Spawn},
-    WolfWorld, WolfEntity, WolfTileBundle,
+    components::{Spawn, WolfCamera},
+    AssetMap, WolfEntity, WolfTile, WolfTileBundle, WolfWorld, WolfAssets,
 };
 
 use bevy::prelude::*;
 
 pub fn startup_system(
-    _commands: Commands,
-    _meshes: ResMut<Assets<Mesh>>,
-    _materials: ResMut<Assets<StandardMaterial>>,
+    ass:Res<AssetServer>,
+    mut assets:ResMut<WolfAssets>    
 ) {
+    assets.meshes.add("block", ass.load("meshes/block.gltf#Mesh0/Primitive0"));
 }
 
 pub fn spawn_cam_system(
     mut commands: Commands,
     spawns: Query<(Entity, &Spawn<WolfCamera>), Added<Spawn<WolfCamera>>>,
 ) {
-   /* for (e, spawn) in spawns.iter() {
+    /* for (e, spawn) in spawns.iter() {
         let cam = spawn.variant.clone();
         let dir = Vec3::new(0.0, 1.0, 0.0);
         commands
@@ -31,7 +31,25 @@ pub fn spawn_cam_system(
     }*/
 }
 
-fn load_map_system(mut commands:Commands, mut world: ResMut<WolfWorld>, maps: Res<Assets<WolfMap>>, entities:Query<Entity, With<WolfEntity>>) {
+pub fn tile_spawn_system(
+    mut commands: Commands,
+    tiles: Query<(Entity, &WolfTile), Added<WolfTile>>,
+    ass: Res<AssetServer>,
+    assets:ResMut<WolfAssets>,
+) {
+    for (e, tile) in tiles.iter() {
+        commands.entity(e).insert(PbrBundle {
+            ..Default::default()
+        });
+    }
+}
+
+fn load_map_system(
+    mut commands: Commands,
+    mut world: ResMut<WolfWorld>,
+    maps: Res<Assets<WolfMap>>,
+    entities: Query<Entity, With<WolfEntity>>,
+) {
     let Some(handle) = &world.map_handle else {
         return;
     };
@@ -53,12 +71,21 @@ fn load_map_system(mut commands:Commands, mut world: ResMut<WolfWorld>, maps: Re
         for x in 0..map.width {
             if let Some(tile) = map.walls.get(y as usize, x as usize).unwrap() {
                 let tile = map.tileset.get(tile).unwrap();
-                commands.spawn(WolfTileBundle::new(x,y, tile));
+                commands.spawn(WolfTileBundle::new(x, y, tile));
             }
         }
     }
-    
+
     // spawn things
+
+    // spawn camera
+    commands
+        .spawn(Camera3dBundle {
+            transform: Transform::from_xyz(2.0, -10.0, 1.0)
+                .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+            ..Default::default()
+        })
+        .insert(WolfEntity);
 }
 
 pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
@@ -70,7 +97,7 @@ pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
 
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
-    app.add_systems(PreUpdate, load_map_system);
-    app.add_systems(Update, (spawn_cam_system).chain());
+    app.add_systems(PreUpdate, (load_map_system).chain());
+    app.add_systems(Update, (spawn_cam_system, tile_spawn_system).chain());
     app.add_systems(PostUpdate, debug_gizmos_system);
 }
