@@ -1,4 +1,4 @@
-use crate::{components::{Cam, Map, Spawn}, assets::WolfMap};
+use crate::{components::{Cam, Spawn}, assets::WolfMap};
 use bevy::prelude::*;
 
 pub fn startup_system(
@@ -25,17 +25,17 @@ pub fn spawn_cam_system(
             .insert(cam.clone());
     }
 }
-
+/* 
 pub fn spawn_map_system(
     mut commands: Commands,
-    mut spawns: Query<(Entity, &Spawn<Map>)>,
+    mut spawns: Query<(Entity, &Spawn<Handle<WolfMap>)>,
     ass: Res<AssetServer>,
 ) {
     for (e, spawn) in spawns.iter() {
         let handle:Handle<WolfMap> = ass.load(&spawn.variant.map_path);
     }
 }
-
+*/
 pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
     // draw origin
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into(), Color::BLUE);
@@ -45,6 +45,6 @@ pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
 
 pub fn build(app: &mut App) {
     app.add_systems(Startup, startup_system);
-    app.add_systems(Update, (spawn_map_system, spawn_cam_system).chain());
+    app.add_systems(Update, (spawn_cam_system).chain());
     app.add_systems(PostUpdate, debug_gizmos_system);
 }
