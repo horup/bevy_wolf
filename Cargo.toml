@@ -16,3 +16,4 @@ opt-level = 3
 [dependencies]
 bevy = "0.11.2"
 tiled = "0.11.1"
+array2d = "0.3.0"
