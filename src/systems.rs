@@ -31,23 +31,23 @@ pub fn spawn_cam_system(
     }*/
 }
 
-fn load_map_system(mut commands:Commands, mut wolf_world: ResMut<WolfWorld>, wolf_maps: Res<Assets<WolfMap>>, entities:Query<Entity, With<WolfEntity>>) {
-    let Some(handle) = &wolf_world.map_handle else {
+fn load_map_system(mut commands:Commands, mut world: ResMut<WolfWorld>, maps: Res<Assets<WolfMap>>, entities:Query<Entity, With<WolfEntity>>) {
+    let Some(handle) = &world.map_handle else {
         return;
     };
 
-    let Some(wolf_map) = wolf_maps.get(handle) else {
+    let Some(wolf_map) = maps.get(handle) else {
         return;
     };
 
-    // clear current world of entities
+    // clear current wolf world of entities
     for e in entities.iter() {
         commands.entity(e).despawn_recursive();
     }
-    wolf_world.map = wolf_map.clone();
-    wolf_world.map_handle = None;
+    world.map = wolf_map.clone();
+    world.map_handle = None;
 
-    let map = &wolf_world.map;
+    let map = &world.map;
     // spawn walls
     for y in 0..map.height {
         for x in 0..map.width {

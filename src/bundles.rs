@@ -13,6 +13,7 @@ impl WolfTileBundle {
         Self {
             wolf_tile: WolfTile {
                 pos: UVec2::new(x, y),
+                texture:tile.texture.clone()
             },
             ..Default::default()
         }
