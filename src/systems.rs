@@ -10,7 +10,8 @@ pub fn startup_system(
     ass:Res<AssetServer>,
     mut assets:ResMut<WolfAssets>    
 ) {
-    assets.meshes.add("block", ass.load("meshes/block.gltf#Mesh0/Primitive0"));
+    assets.meshes.insert("block", ass.load("meshes/block.gltf#Mesh0/Primitive0"));
+    assets.meshes.insert("floor", ass.load("meshes/floor.gltf#Mesh0/Primitive0"));
 }
 
 pub fn spawn_cam_system(
@@ -34,11 +35,32 @@ pub fn spawn_cam_system(
 pub fn tile_spawn_system(
     mut commands: Commands,
     tiles: Query<(Entity, &WolfTile), Added<WolfTile>>,
-    ass: Res<AssetServer>,
-    assets:ResMut<WolfAssets>,
+    mut standard_material:ResMut<Assets<StandardMaterial>>,
+    mut images:ResMut<Assets<Image>>,
+    mut assets:ResMut<WolfAssets>,
+    ass:Res<AssetServer>
 ) {
     for (e, tile) in tiles.iter() {
+        let texture = &tile.texture;
+        let material = match assets.standard_materials.get(texture) {
+            Some(mat) => mat.clone(),
+            None => {
+                let image = match assets.images.get(texture) {
+                    Some(image) => image.clone(),
+                    None => ass.load(format!("images/{}.png", texture)).clone(),
+                };
+                standard_material.add(StandardMaterial {
+                    base_color_texture:Some(image),
+                    unlit:true,
+                    ..Default::default()
+                })
+            }
+        };
+        
         commands.entity(e).insert(PbrBundle {
+            material:material,
+            mesh:assets.meshes.get("block").unwrap(),
+            transform:Transform::from_xyz(tile.pos.x as f32, tile.pos.y as f32, 0.0),
             ..Default::default()
         });
     }
@@ -81,8 +103,8 @@ fn load_map_system(
     // spawn camera
     commands
         .spawn(Camera3dBundle {
-            transform: Transform::from_xyz(2.0, -10.0, 1.0)
-                .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+            transform: Transform::from_xyz(0.0, 0.0, 50.0)
+                .looking_to(Vec3::new(0.0, 0.0, -1.0), Vec3::Z),
             ..Default::default()
         })
         .insert(WolfEntity);

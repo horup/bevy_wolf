@@ -100,7 +100,7 @@ impl AssetLoader for WolfMapAssetLoader {
                                             // swap such that y is up instead of down
                                             let y = height - y - 1;
                                             walls
-                                                .set(x as usize, y as usize, Some(id))
+                                                .set(y as usize, x as usize, Some(id))
                                                 .expect("failed to set WolfMap.walls");
                                         }
                                     }
