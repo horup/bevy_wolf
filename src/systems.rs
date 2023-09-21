@@ -147,6 +147,9 @@ pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys
         // turn
         for ev in mouse_motion.iter() {
             transform.rotate_z(-ev.delta.x  * config.turn_speed);
+            let forward = transform.forward();
+            let side = -Vec3::new(-forward.y, forward.x, 0.0);
+            transform.rotate_axis(side, -ev.delta.y * config.turn_speed);
         }
         // movement
         if keys.pressed(config.forward_key) {
