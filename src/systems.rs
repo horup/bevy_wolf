@@ -4,7 +4,7 @@ use crate::{
     AssetMap, WolfAssets, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld, WolfConfig,
 };
 
-use bevy::{prelude::*, utils::petgraph::dot::Config};
+use bevy::{prelude::*, utils::petgraph::dot::Config, input::mouse::MouseMotion};
 
 pub fn startup_system(mut commands:Commands, ass: Res<AssetServer>, mut assets: ResMut<WolfAssets>) {
     assets
@@ -140,10 +140,12 @@ fn load_map_system(
     .insert(WolfEntity);*/
 }
 
-pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys:Res<Input<KeyCode>>, time:Res<Time>, config:Res<WolfConfig>) {
+pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys:Res<Input<KeyCode>>, time:Res<Time>, config:Res<WolfConfig>, mouse_motion:EventReader<MouseMotion>) {
     for (wcamera, mut transform) in cameras.iter_mut() {
         let mut v = Vec3::new(0.0, 0.0, 0.0);
       
+        // turn
+        // movement
         if keys.pressed(config.forward_key) {
             v.y = 1.0;
         }
