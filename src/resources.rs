@@ -59,6 +59,7 @@ pub struct WolfConfig {
     pub backward_key: KeyCode,
     pub strife_left_key: KeyCode,
     pub strife_right_key: KeyCode,
+    pub turn_speed:f32,
 }
 
 impl Default for WolfConfig {
@@ -68,6 +69,7 @@ impl Default for WolfConfig {
             backward_key: KeyCode::S,
             strife_left_key: KeyCode::A,
             strife_right_key: KeyCode::D,
+            turn_speed:0.01
         }
     }
 }
