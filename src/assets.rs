@@ -112,9 +112,17 @@ impl AssetLoader for WolfMapAssetLoader {
                 if let Some(tiled_object_layer) = layer.as_object_layer() {
                     for obj in tiled_object_layer.objects() {
                         let mut pos = Vec3::new(obj.x, obj.y, 0.0);
+                        pos.y = (tiled_map.height * tiled_map.tile_height) as f32 - pos.y;
+                        let mut size = Vec2::new(0.0, 0.0);
+                        match obj.shape.clone() {
+                            tiled::ObjectShape::Rect { width, height } => {size = (width, height).into()},
+                            tiled::ObjectShape::Ellipse { width, height } => {size = (width, height).into()},
+                            _ =>{}
+                        }
+                        pos.x += size.x / 2.0;
+                        pos.y += size.y / 2.0;
                         pos.x /= tiled_map.tile_width as f32;
                         pos.y /= tiled_map.tile_height as f32;
-                        pos.y = tiled_map.height as f32 - 1.0 - pos.y;
                         entities.push(WolfMapThing {
                             name: obj.name.clone(),
                             pos,
