@@ -143,14 +143,23 @@ fn load_map_system(
 pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys:Res<Input<KeyCode>>, time:Res<Time>, config:Res<WolfConfig>, mut mouse_motion:EventReader<MouseMotion>) {
     for (wcamera, mut transform) in cameras.iter_mut() {
         let mut v = Vec3::new(0.0, 0.0, 0.0);
+        let up = Vec3::new(0.0, 0.0, 1.0);
       
         // turn
         for ev in mouse_motion.iter() {
             transform.rotate_z(-ev.delta.x  * config.turn_speed);
-            let forward = transform.forward();
-            let side = -Vec3::new(-forward.y, forward.x, 0.0);
-            transform.rotate_axis(side, -ev.delta.y * config.turn_speed);
+            let forward = transform.forward().normalize_or_zero();
+            let side = forward.cross(up);
+            let mut t = transform.clone();
+            t.rotate_axis(side.normalize_or_zero(), -ev.delta.y * config.turn_speed);
+            let side = t.forward().normalize_or_zero().cross(up);
+            if side.length() > 0.1 {
+                *transform = t;
+            }
+            let dir = t.rotation * Vec3::new(1.0, 0.0, 0.0);
+            let _ = transform.looking_to(dir, Vec3::Z);
         }
+        
         // movement
         if keys.pressed(config.forward_key) {
             v.y = 1.0;
@@ -166,7 +175,7 @@ pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys
         }
         let v = v.normalize_or_zero();
         let forward = transform.forward();
-        let side = -Vec3::new(-forward.y, forward.x, 0.0);
+        let side = forward.cross(up).normalize_or_zero();
         let dt = time.delta_seconds();
         let speed = 10.0;
         transform.translation += forward * v.y * dt * speed;
