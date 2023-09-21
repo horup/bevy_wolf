@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="3" nextobjectid="19">
- <tileset firstgid="1" name="images" tilewidth="64" tileheight="64" tilecount="3" columns="0">
+ <tileset firstgid="1" name="images" tilewidth="64" tileheight="64" tilecount="9" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="0">
    <image width="64" height="64" source="../images/wall_blue.png"/>
@@ -11,11 +11,32 @@
   <tile id="2">
    <image width="64" height="64" source="../images/wall_red.png"/>
   </tile>
+  <tile id="3">
+   <image width="64" height="64" source="../images/wall_blue_alt.png"/>
+  </tile>
+  <tile id="4">
+   <image width="64" height="64" source="../images/wall_blue_cell.png"/>
+  </tile>
+  <tile id="5">
+   <image width="64" height="64" source="../images/wall_grey_alt.png"/>
+  </tile>
+  <tile id="6">
+   <image width="64" height="64" source="../images/wall_grey_flag.png"/>
+  </tile>
+  <tile id="7">
+   <image width="64" height="64" source="../images/wall_grey_portrait.png"/>
+  </tile>
+  <tile id="8">
+   <image width="64" height="64" source="../images/wall_door_blue.png"/>
+  </tile>
  </tileset>
- <tileset firstgid="4" name="entities" tilewidth="64" tileheight="64" tilecount="1" columns="0">
+ <tileset firstgid="10" name="entities" tilewidth="64" tileheight="64" tilecount="2" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="0">
    <image width="64" height="64" source="../images/entity.png"/>
+  </tile>
+  <tile id="1">
+   <image width="64" height="64" source="../images/door_blue.png"/>
   </tile>
  </tileset>
  <layer id="1" name="Tile Layer 1" width="16" height="16">
@@ -39,7 +60,7 @@
 </data>
  </layer>
  <objectgroup id="2" name="Object Layer 1">
-  <object id="15" name="info_player_start" gid="4" x="127.514" y="321.537" width="64" height="64"/>
-  <object id="18" gid="4" x="440" y="184" width="64" height="64"/>
+  <object id="15" name="info_player_start" gid="10" x="127.514" y="321.537" width="64" height="64"/>
+  <object id="18" gid="10" x="440" y="184" width="64" height="64"/>
  </objectgroup>
 </map>
