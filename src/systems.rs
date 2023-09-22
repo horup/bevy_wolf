@@ -116,8 +116,8 @@ fn load_map_system(
 
     // spawn things
     for entity in map.entities.iter() {
-        dbg!(&entity.name);
         let mut entity = commands.spawn(WolfEntity::default());
+        
        /* if entity.name == "info_player_start" {
             let mut pos = entity.pos;
             pos.z += 0.5;

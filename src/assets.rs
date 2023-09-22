@@ -9,9 +9,10 @@ use bevy::{
 #[derive(Clone, Debug)]
 pub struct WolfMapEntity {
     pub name: String,
-    pub classes: Vec<String>,
+    pub classes: HashMap<String, ()>,
     pub pos: Vec3,
 }
+
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct WolfMapTile {
@@ -93,7 +94,10 @@ impl AssetLoader for WolfMapAssetLoader {
                                                 Some(user_type) => {
                                                     let x = x as f32 + 0.5;
                                                     let y = y as f32 + 0.5;
-                                                    let classes = user_type.split(" ").map(|f|f.to_string()).collect();
+                                                    let mut classes = HashMap::new();
+                                                    for s in user_type.split(" ") {
+                                                        classes.insert(s.to_string(), ());
+                                                    }
                                                     entities.push(WolfMapEntity {
                                                         name: stem,
                                                         classes: classes,
