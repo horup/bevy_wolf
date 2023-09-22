@@ -1,12 +1,16 @@
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld, WolfConfig,
+    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld,
 };
 
-use bevy::{prelude::*, utils::petgraph::dot::Config, input::mouse::MouseMotion};
+use bevy::{input::mouse::MouseMotion, prelude::*, utils::petgraph::dot::Config};
 
-pub fn startup_system(mut commands:Commands, ass: Res<AssetServer>, mut assets: ResMut<WolfAssets>) {
+pub fn startup_system(
+    mut commands: Commands,
+    ass: Res<AssetServer>,
+    mut assets: ResMut<WolfAssets>,
+) {
     assets
         .meshes
         .insert("block", ass.load("meshes/block.gltf#Mesh0/Primitive0"));
@@ -14,17 +18,22 @@ pub fn startup_system(mut commands:Commands, ass: Res<AssetServer>, mut assets: 
         .meshes
         .insert("floor", ass.load("meshes/floor.gltf#Mesh0/Primitive0"));
 
-    commands.spawn(TextBundle {
-        text:Text::from_section("Hello World", TextStyle {
-            font_size:24.0,
-            color:Color::RED,
+    commands
+        .spawn(TextBundle {
+            text: Text::from_section(
+                "Hello World",
+                TextStyle {
+                    font_size: 24.0,
+                    color: Color::RED,
+                    ..Default::default()
+                },
+            ),
             ..Default::default()
-        }),
-        ..Default::default()
-    }).insert(WolfUIFPSText);
+        })
+        .insert(WolfUIFPSText);
 }
 
-fn ui_system(mut q:Query<&mut Text, With<WolfUIFPSText>>, time:Res<Time>) {
+fn ui_system(mut q: Query<&mut Text, With<WolfUIFPSText>>, time: Res<Time>) {
     q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
 }
 
@@ -44,8 +53,6 @@ pub fn spawn_cam_system(
             })
             .insert(cam.clone());
     }*/
-
-
 }
 
 pub fn tile_spawn_system(
@@ -115,21 +122,19 @@ fn load_map_system(
     }
 
     // spawn things
-    for entity in map.entities.iter() {
+    for e in &map.entities {
+        let mut pos = e.pos;
         let mut entity = commands.spawn(WolfEntity::default());
-        
-       /* if entity.name == "info_player_start" {
-            let mut pos = entity.pos;
-            pos.z += 0.5;
-            commands
-                .spawn(Camera3dBundle {
+        if e.has_class("camera") {
+            pos.z = 0.5;
+            entity
+                .insert(Camera3dBundle {
                     transform: Transform::from_xyz(pos.x, pos.y, pos.z)
                         .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 })
-                .insert(WolfEntity)
                 .insert(WolfCamera::default());
-        }*/
+        }
     }
 
     // spawn camera
@@ -142,14 +147,20 @@ fn load_map_system(
     .insert(WolfEntity);*/
 }
 
-pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys:Res<Input<KeyCode>>, time:Res<Time>, config:Res<WolfConfig>, mut mouse_motion:EventReader<MouseMotion>) {
+pub fn camera_system(
+    mut cameras: Query<(&mut WolfCamera, &mut Transform)>,
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    config: Res<WolfConfig>,
+    mut mouse_motion: EventReader<MouseMotion>,
+) {
     for (wcamera, mut transform) in cameras.iter_mut() {
         let mut v = Vec3::new(0.0, 0.0, 0.0);
         let up = Vec3::new(0.0, 0.0, 1.0);
-      
+
         // turn
         for ev in mouse_motion.iter() {
-            transform.rotate_z(-ev.delta.x  * config.turn_speed);
+            transform.rotate_z(-ev.delta.x * config.turn_speed);
             let forward = transform.forward().normalize_or_zero();
             let side = forward.cross(up);
             let mut t = transform.clone();
@@ -161,7 +172,7 @@ pub fn camera_system(mut cameras: Query<(&mut WolfCamera, &mut Transform)>, keys
             let dir = t.rotation * Vec3::new(1.0, 0.0, 0.0);
             let _ = transform.looking_to(dir, Vec3::Z);
         }
-        
+
         // movement
         if keys.pressed(config.forward_key) {
             v.y = 1.0;
@@ -198,7 +209,13 @@ pub fn build_systems(app: &mut App) {
     app.add_systems(PreUpdate, (load_map_system).chain());
     app.add_systems(
         Update,
-        (spawn_cam_system, tile_spawn_system, camera_system, ui_system).chain(),
+        (
+            spawn_cam_system,
+            tile_spawn_system,
+            camera_system,
+            ui_system,
+        )
+            .chain(),
     );
     app.add_systems(PostUpdate, debug_gizmos_system);
 }

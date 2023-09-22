@@ -13,6 +13,12 @@ pub struct WolfMapEntity {
     pub pos: Vec3,
 }
 
+impl WolfMapEntity {
+    pub fn has_class(&self, class:&str) -> bool {
+        self.classes.contains_key(class)
+    }
+}
+
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct WolfMapTile {
