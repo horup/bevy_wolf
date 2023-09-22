@@ -80,7 +80,9 @@ pub fn sprite_spawn_system(
                 standard_material.add(StandardMaterial {
                     base_color_texture: Some(image),
                     alpha_mode:AlphaMode::Blend,
-                    unlit: true,
+                    metallic:0.0,
+                    perceptual_roughness:1.0,
+                    unlit: false,
                     ..Default::default()
                 })
             }
@@ -128,7 +130,9 @@ pub fn tile_spawn_system(
                 };
                 standard_material.add(StandardMaterial {
                     base_color_texture: Some(image),
-                    unlit: true,
+                    metallic:0.0,
+                    perceptual_roughness:1.0,
+                    unlit: false,
                     ..Default::default()
                 })
             }
@@ -177,6 +181,8 @@ fn load_map_system(
 
     // spawn entities
     for e in &map.entities {
+        let x = e.pos.x;
+        let y = e.pos.y;
         let mut pos = e.pos;
         let mut entity = commands.spawn(WolfEntity::default());
         if e.has_class("camera") {
@@ -196,6 +202,33 @@ fn load_map_system(
                     texture: e.name.clone(),
                 })
                 .insert(Transform::from_xyz(pos.x, pos.y, pos.z));
+        }
+
+        if e.has_class("light") {
+            /*entity.insert(ComputedVisibility::default());
+            entity.with_children(|b|{
+                dbg!("ha");
+                b.spawn(PointLightBundle {
+                    point_light:PointLight {
+                        shadows_enabled:true,
+                        intensity:1600.0,
+                        color:Color::WHITE,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                });
+            });*/
+
+            commands.spawn(PointLightBundle {
+                transform:Transform::from_xyz(x, y, 0.5),
+                point_light:PointLight {
+                    shadows_enabled:true,
+                    intensity:100.0,
+                    color:Color::WHITE,
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
         }
     }
 
