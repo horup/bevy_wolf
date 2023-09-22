@@ -1,7 +1,8 @@
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld, WolfSprite,
+    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfSprite, WolfThing, WolfTile, WolfTileBundle,
+    WolfWorld,
 };
 
 use bevy::{input::mouse::MouseMotion, prelude::*, utils::petgraph::dot::Config};
@@ -56,6 +57,39 @@ pub fn spawn_cam_system(
             })
             .insert(cam.clone());
     }*/
+}
+
+pub fn sprite_spawn_system(
+    mut commands: Commands,
+    sprites: Query<(Entity, &WolfSprite), Added<WolfSprite>>,
+    mut standard_material: ResMut<Assets<StandardMaterial>>,
+    mut assets: ResMut<WolfAssets>,
+    ass: Res<AssetServer>,
+) {
+    for (e, sp) in sprites.iter() {
+        let texture = &sp.texture;
+        let material = match assets.standard_materials.get(texture) {
+            Some(mat) => mat.clone(),
+            None => {
+                let image = match assets.images.get(texture) {
+                    Some(image) => image.clone(),
+                    None => ass.load(format!("images/{}.png", texture)).clone(),
+                };
+                standard_material.add(StandardMaterial {
+                    base_color_texture: Some(image),
+                    unlit: true,
+                    ..Default::default()
+                })
+            }
+        };
+
+        commands
+            .entity(e)
+            .insert(assets.meshes.get("sprite").unwrap())
+            .insert(material)
+            .insert(Visibility::default())
+            .insert(ComputedVisibility::default()).insert(GlobalTransform::default());
+    }
 }
 
 pub fn tile_spawn_system(
@@ -140,9 +174,11 @@ fn load_map_system(
         }
 
         if e.has_class("sprite") {
-            entity.insert(WolfSprite {
-                texture:e.name.clone()
-            }).insert(Transform::from_xyz(pos.x, pos.y, pos.z));
+            entity
+                .insert(WolfSprite {
+                    texture: e.name.clone(),
+                })
+                .insert(Transform::from_xyz(pos.x, pos.y, pos.z));
         }
     }
 
@@ -221,6 +257,7 @@ pub fn build_systems(app: &mut App) {
         (
             spawn_cam_system,
             tile_spawn_system,
+            sprite_spawn_system,
             camera_system,
             ui_system,
         )
