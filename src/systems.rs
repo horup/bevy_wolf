@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
@@ -93,8 +95,18 @@ pub fn sprite_spawn_system(
     }
 }
 
-pub fn sprite_system() {
-    
+pub fn sprite_system(sprites:Query<Entity, With<WolfSprite>>, mut transforms:Query<&mut Transform>, cameras:Query<Entity, With<Camera3d>>) {
+    for camera in cameras.iter() {
+        let camera_transform = transforms.get(camera).unwrap().clone();
+        for sprite in sprites.iter() {
+            if let Ok(mut transform) = transforms.get_mut(sprite) {
+                //let t = transform.translation - camera_transform.translation;
+                let z = transform.translation.z;
+                transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
+                transform.rotate_z(PI/2.0);
+            }
+        }
+    }
 }
 
 pub fn tile_spawn_system(
@@ -125,7 +137,7 @@ pub fn tile_spawn_system(
         commands.entity(e).insert(PbrBundle {
             material: material,
             mesh: assets.meshes.get("block").unwrap(),
-            transform: Transform::from_xyz(tile.pos.x as f32, tile.pos.y as f32, 0.0),
+            transform: Transform::from_xyz(tile.pos.x as f32, tile.pos.y as f32, 0.0).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
             ..Default::default()
         });
     }
@@ -263,8 +275,8 @@ pub fn build_systems(app: &mut App) {
             spawn_cam_system,
             tile_spawn_system,
             sprite_spawn_system,
-            sprite_system,
             camera_system,
+            sprite_system,
             ui_system,
         )
             .chain(),
