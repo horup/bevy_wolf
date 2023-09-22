@@ -77,6 +77,7 @@ pub fn sprite_spawn_system(
                 };
                 standard_material.add(StandardMaterial {
                     base_color_texture: Some(image),
+                    alpha_mode:AlphaMode::Blend,
                     unlit: true,
                     ..Default::default()
                 })
