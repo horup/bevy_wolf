@@ -107,7 +107,7 @@ fn load_map_system(
     // spawn walls
     for y in 0..map.height {
         for x in 0..map.width {
-            if let Some(tile) = map.walls.get(y as usize, x as usize).unwrap() {
+            if let Some(tile) = map.blocks.get(y as usize, x as usize).unwrap() {
                 let tile = map.tileset.get(tile).unwrap();
                 commands.spawn(WolfTileBundle::new(x, y, tile));
             }
@@ -115,7 +115,7 @@ fn load_map_system(
     }
 
     // spawn things
-    for thing in map.things.iter() {
+    for thing in map.entities.iter() {
         if thing.name == "info_player_start" {
             let mut pos = thing.pos;
             pos.z += 0.5;
