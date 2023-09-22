@@ -38,13 +38,13 @@
   <tile id="3" type="entity">
    <image width="64" height="64" source="../images/door_blue.png"/>
   </tile>
-  <tile id="4" type="entity">
+  <tile id="4" type="entity sprite">
    <image width="64" height="64" source="../images/deco_barrel.png"/>
   </tile>
-  <tile id="5" type="entity">
+  <tile id="5" type="entity sprite">
    <image width="64" height="64" source="../images/deco_plant.png"/>
   </tile>
-  <tile id="6" type="entity">
+  <tile id="6" type="entity sprite">
    <image width="64" height="64" source="../images/item_treasure_cross.png"/>
   </tile>
  </tileset>

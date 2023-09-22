@@ -27,6 +27,11 @@ pub struct WolfTile {
 }
 
 #[derive(Component, Default, Clone)]
+pub struct WolfSprite {
+    pub texture:String
+}
+
+#[derive(Component, Default, Clone)]
 pub struct WolfEntity;
 
 

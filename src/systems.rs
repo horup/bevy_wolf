@@ -1,7 +1,7 @@
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld,
+    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfThing, WolfTile, WolfTileBundle, WolfWorld, WolfSprite,
 };
 
 use bevy::{input::mouse::MouseMotion, prelude::*, utils::petgraph::dot::Config};
@@ -17,6 +17,9 @@ pub fn startup_system(
     assets
         .meshes
         .insert("floor", ass.load("meshes/floor.gltf#Mesh0/Primitive0"));
+    assets
+        .meshes
+        .insert("sprite", ass.load("meshes/sprite.gltf#Mesh0/Primitive0"));
 
     commands
         .spawn(TextBundle {
@@ -121,7 +124,7 @@ fn load_map_system(
         }
     }
 
-    // spawn things
+    // spawn entities
     for e in &map.entities {
         let mut pos = e.pos;
         let mut entity = commands.spawn(WolfEntity::default());
@@ -134,6 +137,12 @@ fn load_map_system(
                     ..Default::default()
                 })
                 .insert(WolfCamera::default());
+        }
+
+        if e.has_class("sprite") {
+            entity.insert(WolfSprite {
+                texture:e.name.clone()
+            }).insert(Transform::from_xyz(pos.x, pos.y, pos.z));
         }
     }
 
