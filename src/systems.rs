@@ -93,6 +93,10 @@ pub fn sprite_spawn_system(
     }
 }
 
+pub fn sprite_system() {
+    
+}
+
 pub fn tile_spawn_system(
     mut commands: Commands,
     tiles: Query<(Entity, &WolfTile), Added<WolfTile>>,
@@ -259,6 +263,7 @@ pub fn build_systems(app: &mut App) {
             spawn_cam_system,
             tile_spawn_system,
             sprite_spawn_system,
+            sprite_system,
             camera_system,
             ui_system,
         )
