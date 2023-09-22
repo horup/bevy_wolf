@@ -137,7 +137,7 @@ pub fn tile_spawn_system(
         commands.entity(e).insert(PbrBundle {
             material: material,
             mesh: assets.meshes.get("block").unwrap(),
-            transform: Transform::from_xyz(tile.pos.x as f32, tile.pos.y as f32, 0.0).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+            transform: Transform::from_xyz(tile.pos.x as f32, tile.pos.y as f32, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
             ..Default::default()
         });
     }
