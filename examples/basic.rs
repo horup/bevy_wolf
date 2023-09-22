@@ -1,4 +1,4 @@
-use std::{process::exit, slice::Windows};
+use std::process::exit;
 
 use bevy::{prelude::*, render::texture::ImageSampler, window::{PresentMode, Cursor, CursorGrabMode}};
 use bevy_wolf::*;
@@ -26,8 +26,11 @@ fn main() {
         .run();
 }
 
-fn input_system(keys:Res<Input<KeyCode>>) {
+fn input_system(keys:Res<Input<KeyCode>>, mut windows:Query<&mut Window>) {
+    let mut window = windows.single_mut();
     if keys.just_pressed(KeyCode::Escape) {
+        //window.cursor.grab_mode = CursorGrabMode::None;
+        //window.cursor.visible = true;
         exit(0);
     }
 }
