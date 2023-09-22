@@ -115,9 +115,11 @@ fn load_map_system(
     }
 
     // spawn things
-    for thing in map.entities.iter() {
-        if thing.name == "info_player_start" {
-            let mut pos = thing.pos;
+    for entity in map.entities.iter() {
+        dbg!(&entity.name);
+        let mut entity = commands.spawn(WolfEntity::default());
+       /* if entity.name == "info_player_start" {
+            let mut pos = entity.pos;
             pos.z += 0.5;
             commands
                 .spawn(Camera3dBundle {
@@ -127,7 +129,7 @@ fn load_map_system(
                 })
                 .insert(WolfEntity)
                 .insert(WolfCamera::default());
-        }
+        }*/
     }
 
     // spawn camera

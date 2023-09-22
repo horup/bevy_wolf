@@ -90,12 +90,13 @@ impl AssetLoader for WolfMapAssetLoader {
                                             let stem = stem.to_string_lossy().to_string();
                                             let y = height - y - 1;
                                             match &tiled_tile.user_type {
-                                                Some(class) => {
+                                                Some(user_type) => {
                                                     let x = x as f32 + 0.5;
                                                     let y = y as f32 + 0.5;
+                                                    let classes = user_type.split(" ").map(|f|f.to_string()).collect();
                                                     entities.push(WolfMapEntity {
                                                         name: stem,
-                                                        classes: [class.clone()].into(),
+                                                        classes: classes,
                                                         pos: Vec3::new(x, y, 0.0),
                                                     });
                                                 }
