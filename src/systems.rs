@@ -175,6 +175,7 @@ fn load_map_system(
             base_color: Color::rgb_u8(120, 120, 120),
             metallic: 0.0,
             perceptual_roughness: 1.0,
+            unlit:true,
             ..Default::default()
         }),
         ..Default::default()
@@ -188,6 +189,7 @@ fn load_map_system(
             base_color: Color::rgb_u8(56, 56, 56),
             metallic: 0.0,
             perceptual_roughness: 1.0,
+            unlit:true,
             ..Default::default()
         }),
         ..Default::default()
