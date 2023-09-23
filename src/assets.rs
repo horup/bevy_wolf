@@ -22,7 +22,7 @@ impl WolfMapEntity {
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct WolfMapTile {
-    pub texture: String,
+    pub image_path: String,
 }
 
 #[derive(TypeUuid, TypePath, Debug, Clone)]
@@ -111,7 +111,7 @@ impl AssetLoader for WolfMapAssetLoader {
                                                     });
                                                 }
                                                 None => {
-                                                    let wolf_tile = WolfMapTile { texture: stem };
+                                                    let wolf_tile = WolfMapTile { image_path: stem };
 
                                                     let id = match tileset_map.get(&wolf_tile) {
                                                         Some(id) => *id as u32,

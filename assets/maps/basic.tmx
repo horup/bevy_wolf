@@ -39,18 +39,33 @@
    <image width="64" height="64" source="../images/door_blue.png"/>
   </tile>
   <tile id="4" type="entity sprite">
+   <properties>
+    <property name="image" value="images/deco_barrel.png"/>
+   </properties>
    <image width="64" height="64" source="../images/deco_barrel.png"/>
   </tile>
   <tile id="5" type="entity sprite">
+   <properties>
+    <property name="image" value="images/deco_plant.png"/>
+   </properties>
    <image width="64" height="64" source="../images/deco_plant.png"/>
   </tile>
   <tile id="6" type="entity sprite">
+   <properties>
+    <property name="image" value="images/item_treasure_cross.png"/>
+   </properties>
    <image width="64" height="64" source="../images/item_treasure_cross.png"/>
   </tile>
   <tile id="7" type="entity sprite light">
+   <properties>
+    <property name="image" value="images/deco_lamp_floor.png"/>
+   </properties>
    <image width="64" height="64" source="../images/deco_lamp_floor.png"/>
   </tile>
   <tile id="8" type="entity light sprite">
+   <properties>
+    <property name="image" value="images/deco_lamp_loft.png"/>
+   </properties>
    <image width="64" height="64" source="../images/deco_lamp_loft.png"/>
   </tile>
  </tileset>
