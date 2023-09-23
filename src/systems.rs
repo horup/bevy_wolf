@@ -121,7 +121,7 @@ pub fn tile_spawn_system(
 ) {
     for (e, tile) in tiles.iter() {
         let texture = &tile.texture;
-        let material = match assets.standard_materials.get(texture) {
+       /*  let material = match assets.standard_materials.get(texture) {
             Some(mat) => mat.clone(),
             None => {
                 let image = match assets.images.get(texture) {
@@ -136,7 +136,14 @@ pub fn tile_spawn_system(
                     ..Default::default()
                 })
             }
-        };
+        };*/
+
+        let material = standard_material.add(StandardMaterial {
+            base_color_texture:Some(ass.load(format!("images/{}.png", texture))),
+            metallic:0.0,
+            perceptual_roughness:1.0,
+            ..Default::default()
+        });
 
         commands.entity(e).insert(PbrBundle {
             material: material,
