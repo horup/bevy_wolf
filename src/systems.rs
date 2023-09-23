@@ -224,7 +224,6 @@ fn load_map_system(
             commands.spawn(PointLightBundle {
                 transform:Transform::from_xyz(x, y, 0.5),
                 point_light:PointLight {
-                    shadows_enabled:true,
                     intensity:100.0,
                     color:Color::WHITE,
                     ..Default::default()
