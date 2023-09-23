@@ -38,8 +38,11 @@ pub fn startup_system(
         .insert(WolfUIFPSText);
 }
 
-fn ui_system(mut q: Query<&mut Text, With<WolfUIFPSText>>, time: Res<Time>) {
-    q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
+fn ui_system(mut q: Query<&mut Text, With<WolfUIFPSText>>, time: Res<Time>, mut wolf_world:ResMut<WolfWorld>) {
+    wolf_world.updates += 1;
+    if wolf_world.updates % 100 == 0 {
+        q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
+    }
 }
 
 pub fn spawn_system(

@@ -8,6 +8,7 @@ use crate::WolfMap;
 
 #[derive(Default, Resource)]
 pub struct WolfWorld {
+    pub updates:u64,
     pub map: WolfMap,
     pub(crate) map_handle: Option<Handle<WolfMap>>,
 }
