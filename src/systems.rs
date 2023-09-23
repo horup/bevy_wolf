@@ -181,10 +181,10 @@ fn load_map_system(
     // spawn walls
     for y in 0..map.height {
         for x in 0..map.width {
-            if let Some(tile) = map.blocks.get(y as usize, x as usize).unwrap() {
+           /*  if let Some(tile) = map.layers.get(y as usize, x as usize).unwrap() {
                 let tile = map.tileset.get(tile).unwrap();
                 commands.spawn(WolfTileBundle::new(x, y, tile));
-            }
+            }*/
         }
     }
 
