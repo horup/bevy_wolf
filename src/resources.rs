@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{PluginGroup, *},
+    prelude::*,
     reflect::{TypePath, TypeUuid},
     utils::HashMap,
 };

@@ -9,8 +9,6 @@ mod systems;
 mod assets;
 pub use assets::*;
 
-mod bundles;
-pub use bundles::*;
 
 use bevy::prelude::*;
 pub struct WolfPlugin;

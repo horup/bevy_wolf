@@ -6,31 +6,12 @@ use bevy::{
     utils::HashMap,
 };
 
-#[derive(Clone, Debug)]
-pub struct WolfMapEntity {
-    pub name: String,
-    pub classes: HashMap<String, ()>,
-    pub pos: Vec3,
-}
-
-impl WolfMapEntity {
-    pub fn has_class(&self, class: &str) -> bool {
-        self.classes.contains_key(class)
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct WolfMapTile {
-    pub image: String,
-    pub classes: HashMap<String, ()>,
-    pub pos: Vec3,
-}
+use crate::WolfEntity;
 
 #[derive(TypeUuid, TypePath, Debug, Clone)]
 #[uuid = "8a6ed18a-13d6-45b1-8ba7-ede1b13500c5"]
 pub struct WolfMap {
-    pub entities: Vec<WolfMapEntity>,
-    pub layers: Vec<Array2D<Option<WolfMapTile>>>,
+    pub layers: Vec<Array2D<Option<WolfEntity>>>,
     pub width: u32,
     pub height: u32,
 }
@@ -38,7 +19,6 @@ pub struct WolfMap {
 impl Default for WolfMap {
     fn default() -> Self {
         Self {
-            entities: Default::default(),
             layers: Default::default(),
             width: Default::default(),
             height: Default::default(),
@@ -79,7 +59,6 @@ impl AssetLoader for WolfMapAssetLoader {
             let tiled_map = loader.load_tmx_map(load_context.path()).unwrap();
             let width = tiled_map.width;
             let height = tiled_map.height;
-            let mut entities = Vec::new();
             let mut layers = Vec::new();
             for tiled_layer in tiled_map.layers() {
                 if let Some(tiled_tile_layer) = tiled_layer.as_tile_layer() {
@@ -100,10 +79,11 @@ impl AssetLoader for WolfMapAssetLoader {
                                         tiled::PropertyValue::StringValue(s) => Some(s.clone()),
                                         _=> None
                                     }).unwrap_or_default();
-                                    *tile = Some(WolfMapTile {
+                                    *tile = Some(WolfEntity {
                                         image,
                                         classes,
-                                        pos: Vec3::new(x as f32 + 0.5, x as f32 + 0.5, 0.0),
+                                        pos: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0),
+                                        index: UVec2::new(x, y)
                                     });
                                 }
                             }
@@ -114,7 +94,6 @@ impl AssetLoader for WolfMapAssetLoader {
             }
 
             let wolf_map = WolfMap {
-                entities,
                 layers,
                 width,
                 height,

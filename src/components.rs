@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 
 #[derive(Component, Clone)]
 pub struct Spawn<T : Clone> {
@@ -28,11 +28,21 @@ pub struct WolfTile {
 
 #[derive(Component, Default, Clone)]
 pub struct WolfSprite {
-    pub texture:String
 }
 
-#[derive(Component, Default, Clone)]
-pub struct WolfEntity;
+#[derive(Component, Default, Clone, Debug)]
+pub struct WolfEntity {
+    pub image: String,
+    pub classes: HashMap<String, ()>,
+    pub pos: Vec3,
+    pub index: UVec2
+}
+
+impl WolfEntity {
+    pub fn has_class(&self, class: &str) -> bool {
+        self.classes.contains_key(class)
+    }
+}
 
 
 #[derive(Component)]
