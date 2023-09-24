@@ -169,11 +169,11 @@ fn load_map_system(
             }
         }
     }
-
+    let size = wolf_map.height.max(wolf_map.width) as f32;
     // spawn floor
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane::from_size(64.0))),
-        transform: Transform::default().looking_to(Vec3::Y, Vec3::Z),
+        mesh: meshes.add(Mesh::from(shape::Plane::from_size(size))),
+        transform: Transform::from_xyz(size / 2.0, size / 2.0, 0.0).looking_to(Vec3::Y, Vec3::Z),
         material: materials.add(StandardMaterial {
             base_color: Color::rgb_u8(120, 120, 120),
             metallic: 0.0,
@@ -187,7 +187,7 @@ fn load_map_system(
     // spawn cealing
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane::from_size(64.0))),
-        transform: Transform::from_xyz(0.0, 0.0, 1.0).looking_to(Vec3::Y, -Vec3::Z),
+        transform: Transform::from_xyz(size / 2.0, size / 2.0, 1.0).looking_to(Vec3::Y, -Vec3::Z),
         material: materials.add(StandardMaterial {
             base_color: Color::rgb_u8(56, 56, 56),
             metallic: 0.0,
