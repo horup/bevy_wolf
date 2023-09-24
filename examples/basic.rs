@@ -36,5 +36,5 @@ fn input_system(keys:Res<Input<KeyCode>>, mut windows:Query<&mut Window>) {
 }
 
 fn startup_system(mut world:ResMut<WolfWorld>, ass:Res<AssetServer>, ) {
-    world.load_map(ass.load("maps/basic.tmx"));
+    world.load_map(ass.load("maps/big.tmx"));
 }
