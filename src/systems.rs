@@ -313,7 +313,8 @@ pub fn instance_manager_spawn_system(
 pub fn instance_manage_render_system(instances: Query<(&WolfInstance<StandardMaterial>, &Transform)>, mut  instance_managers: Query<&WolfInstanceManager<StandardMaterial>>,) {
     for instance_manager in instance_managers.iter_mut() {
         for (instance, transform) in instances.iter() {
-            
+            if instance_manager.instance == *instance {
+            }
         }
     }
 }
