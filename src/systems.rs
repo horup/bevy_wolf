@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfSprite, WolfThing, WolfTile, WolfWorld,
+    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfSprite, WolfThing, WolfTile, WolfWorld, WolfInstance,
 };
 
 use bevy::{input::mouse::MouseMotion, prelude::*, utils::petgraph::dot::Config};
@@ -78,6 +78,11 @@ pub fn spawn_system(
                 transform:Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
                 ..Default::default()
             });*/
+            entity.insert(WolfInstance {
+                mesh:block_mesh.clone(),
+                image:ass.load(&we.image),
+                ..Default::default()
+            });
         }
 
         if we.has_class("sprite") {

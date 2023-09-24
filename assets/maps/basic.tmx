@@ -27,6 +27,9 @@
    <image width="64" height="64" source="../images/wall_blue_cell.png"/>
   </tile>
   <tile id="5" type="block">
+   <properties>
+    <property name="image" value="images/wall_grey_alt.png"/>
+   </properties>
    <image width="64" height="64" source="../images/wall_grey_alt.png"/>
   </tile>
   <tile id="6" type="block">
