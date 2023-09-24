@@ -3,10 +3,15 @@ use std::f32::consts::PI;
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfSprite, WolfThing, WolfTile, WolfWorld, WolfInstance,
+    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfInstance, WolfInstanceManager, WolfSprite,
+    WolfThing, WolfTile, WolfWorld,
 };
 
-use bevy::{input::mouse::MouseMotion, prelude::*, utils::petgraph::dot::Config};
+use bevy::{
+    input::mouse::MouseMotion,
+    prelude::*,
+    utils::{petgraph::dot::Config, HashMap},
+};
 
 pub fn startup_system(
     mut commands: Commands,
@@ -38,7 +43,11 @@ pub fn startup_system(
         .insert(WolfUIFPSText);
 }
 
-fn ui_system(mut q: Query<&mut Text, With<WolfUIFPSText>>, time: Res<Time>, mut wolf_world:ResMut<WolfWorld>) {
+fn ui_system(
+    mut q: Query<&mut Text, With<WolfUIFPSText>>,
+    time: Res<Time>,
+    mut wolf_world: ResMut<WolfWorld>,
+) {
     wolf_world.updates += 1;
     if wolf_world.updates % 100 == 0 {
         q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
@@ -53,6 +62,11 @@ pub fn spawn_system(
 ) {
     let block_mesh: Handle<Mesh> = ass.load("meshes/block.gltf#Mesh0/Primitive0");
     let sprite_mesh: Handle<Mesh> = ass.load("meshes/sprite.gltf#Mesh0/Primitive0");
+    //let existing_materials = materials.iter().map(|x|x.clone()).collect();
+    let mut existing_materials = HashMap::new();
+    for (id, material) in materials.iter() {
+        existing_materials.insert(material.base_color_texture.clone(), id.clone());
+    }
     for (e, we) in spawns.iter() {
         let mut entity = commands.entity(e);
         if we.has_class("camera") {
@@ -78,49 +92,53 @@ pub fn spawn_system(
                 transform:Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
                 ..Default::default()
             });*/
-            entity.insert(WolfInstance {
-                mesh:block_mesh.clone(),
-                image:ass.load(&we.image),
-                ..Default::default()
-            });
+            let material = match existing_materials.get(&Some(ass.load(&we.image))) {
+                Some(h) => materials.get_handle(*h),
+                None => {
+                    let material = materials.add(StandardMaterial {
+                        perceptual_roughness: 1.0,
+                        metallic: 0.0,
+                        base_color_texture: Some(ass.load(&we.image)),
+                        unlit: true,
+                        ..Default::default()
+                    });
+                    existing_materials.insert(Some(ass.load(&we.image)), material.id());
+                    material
+                }
+            };
+
+            entity
+                .insert(WolfInstance {
+                    mesh: block_mesh.clone(),
+                    material,
+                    ..Default::default()
+                })
+                .insert(Transform::from_xyz(
+                    we.index.x as f32,
+                    we.index.y as f32,
+                    0.0,
+                ));
         }
 
         if we.has_class("sprite") {
-            entity.insert(PbrBundle {
-                mesh:sprite_mesh.clone(),
-                material:materials.add(StandardMaterial {
-                    alpha_mode:AlphaMode::Blend,
-                    perceptual_roughness:1.0,
-                    metallic:0.0,
-                    base_color_texture:Some(ass.load(&we.image)),
-                    unlit:true,
+            entity
+                .insert(PbrBundle {
+                    mesh: sprite_mesh.clone(),
+                    material: materials.add(StandardMaterial {
+                        alpha_mode: AlphaMode::Blend,
+                        perceptual_roughness: 1.0,
+                        metallic: 0.0,
+                        base_color_texture: Some(ass.load(&we.image)),
+                        unlit: true,
+                        ..Default::default()
+                    }),
+                    transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.0)
+                        .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
                     ..Default::default()
-                }),
-                transform:Transform::from_xyz(we.pos.x, we.pos.y, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
-                ..Default::default()
-            }).insert(WolfSprite {
-
-            });
+                })
+                .insert(WolfSprite {});
         }
     }
-}
-
-pub fn spawn_cam_system(
-    mut commands: Commands,
-    spawns: Query<(Entity, &Spawn<WolfCamera>), Added<Spawn<WolfCamera>>>,
-) {
-    /* for (e, spawn) in spawns.iter() {
-        let cam = spawn.variant.clone();
-        let dir = Vec3::new(0.0, 1.0, 0.0);
-        commands
-            .entity(e)
-            .insert(Camera3dBundle {
-                transform: Transform::from_xyz(cam.pos.x, cam.pos.y, cam.pos.z)
-                    .looking_to(dir, Vec3::Z),
-                ..Default::default()
-            })
-            .insert(cam.clone());
-    }*/
 }
 
 pub fn sprite_system(
@@ -183,7 +201,7 @@ fn load_map_system(
             base_color: Color::rgb_u8(120, 120, 120),
             metallic: 0.0,
             perceptual_roughness: 1.0,
-            unlit:true,
+            unlit: true,
             ..Default::default()
         }),
         ..Default::default()
@@ -197,7 +215,7 @@ fn load_map_system(
             base_color: Color::rgb_u8(56, 56, 56),
             metallic: 0.0,
             perceptual_roughness: 1.0,
-            unlit:true,
+            unlit: true,
             ..Default::default()
         }),
         ..Default::default()
@@ -263,6 +281,31 @@ pub fn camera_system(
     }
 }
 
+pub fn instance_manager_spawn_system(
+    mut commands: Commands,
+    instance_managers: Query<&WolfInstanceManager<StandardMaterial>>,
+    instances: Query<(&WolfInstance<StandardMaterial>, &Transform)>,
+) {
+    let mut existing = HashMap::new();
+    for wi in instance_managers.iter() {
+        existing.insert(&wi.instance, ());
+    }
+    let mut new = HashMap::new();
+    for (wi, t) in instances.iter() {
+        if existing.contains_key(wi) == false {
+            new.insert(wi, ());
+        }
+    }
+
+    for instance in new.keys() {
+        let ins = (*instance).clone();
+        commands.spawn(WolfInstanceManager { instance: ins });
+        dbg!("spawned");
+    }
+}
+
+pub fn instance_manage_render_system() {}
+
 pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
     // draw origin
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into(), Color::BLUE);
@@ -275,7 +318,15 @@ pub fn build_systems(app: &mut App) {
     app.add_systems(PreUpdate, (load_map_system).chain());
     app.add_systems(
         Update,
-        (spawn_system, camera_system, sprite_system, ui_system).chain(),
+        (
+            spawn_system,
+            camera_system,
+            sprite_system,
+            ui_system,
+            instance_manager_spawn_system,
+            instance_manage_render_system,
+        )
+            .chain(),
     );
     app.add_systems(PostUpdate, debug_gizmos_system);
 }
