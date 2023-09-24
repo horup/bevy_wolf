@@ -66,7 +66,7 @@ pub fn spawn_system(
         }
 
         if we.has_class("block") {
-            entity.insert(PbrBundle {
+            /*entity.insert(PbrBundle {
                 mesh:block_mesh.clone(),
                 material:materials.add(StandardMaterial {
                     perceptual_roughness:1.0,
@@ -77,7 +77,7 @@ pub fn spawn_system(
                 }),
                 transform:Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
                 ..Default::default()
-            });
+            });*/
         }
 
         if we.has_class("sprite") {

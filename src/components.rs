@@ -44,6 +44,12 @@ impl WolfEntity {
     }
 }
 
+#[derive(Component, Default, Clone)]
+pub struct WolfInstance {
+    pub mesh:Handle<Mesh>,
+    pub image:Handle<Image>
+}
+
 
 #[derive(Component)]
 pub struct WolfUIFPSText;
