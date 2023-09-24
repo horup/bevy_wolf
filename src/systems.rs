@@ -299,12 +299,24 @@ pub fn instance_manager_spawn_system(
 
     for instance in new.keys() {
         let ins = (*instance).clone();
-        commands.spawn(WolfInstanceManager { instance: ins });
-        dbg!("spawned");
+        commands.spawn(WolfInstanceManager { instance: ins.clone() }).insert(PbrBundle {
+            mesh:ins.mesh,
+            material:ins.material.clone(),
+            transform:Transform::from_xyz(0.0, 0.0, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+            ..Default::default()
+        });
     }
+
+    // todo cleanup
 }
 
-pub fn instance_manage_render_system() {}
+pub fn instance_manage_render_system(instances: Query<(&WolfInstance<StandardMaterial>, &Transform)>, mut  instance_managers: Query<&WolfInstanceManager<StandardMaterial>>,) {
+    for instance_manager in instance_managers.iter_mut() {
+        for (instance, transform) in instances.iter() {
+            
+        }
+    }
+}
 
 pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
     // draw origin
