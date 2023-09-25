@@ -115,7 +115,7 @@ pub fn spawn_system(
                 .insert(WolfInstance {
                     mesh: block_mesh.clone(),
                     material,
-                    redraw: true,
+                    request_redraw: true,
                     ..Default::default()
                 })
                 .insert(
@@ -309,7 +309,7 @@ pub fn instance_manager_spawn_system(
         commands
             .spawn(WolfInstanceManager {
                 instance: ins.clone(),
-                redraw: true,
+                request_redraw: true,
             })
             .insert(PbrBundle {
                 mesh,
@@ -337,9 +337,9 @@ pub fn instance_manage_render_system(
         for (mut instance, _) in instances.iter_mut() {
             if instance_manager.instance == *instance {
                 count += 1;
-                if instance.redraw {
-                    instance_manager.redraw = true;
-                    instance.redraw = false;
+                if instance.request_redraw {
+                    instance_manager.request_redraw = true;
+                    instance.request_redraw = false;
                 }
             }
         }
@@ -349,7 +349,7 @@ pub fn instance_manage_render_system(
             continue;
         }
 
-        if instance_manager.redraw {
+        if instance_manager.request_redraw {
             let mut instance_mesh = meshes.get(&instance_manager.instance.mesh).unwrap().clone();
             instance_mesh.duplicate_vertices();
             let vertex_count = instance_mesh.count_vertices();
@@ -405,7 +405,7 @@ pub fn instance_manage_render_system(
                 if instance_manager.instance == *instance {}
             }
 
-            instance_manager.redraw = false;
+            instance_manager.request_redraw = false;
         }
     }
 }
