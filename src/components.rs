@@ -21,12 +21,6 @@ pub struct WolfThing {
 }
 
 #[derive(Component, Default, Clone)]
-pub struct WolfTile {
-    pub pos:UVec2,
-    pub texture:String
-}
-
-#[derive(Component, Default, Clone)]
 pub struct WolfSprite {
 }
 

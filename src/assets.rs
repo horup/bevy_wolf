@@ -6,7 +6,7 @@ use bevy::{
     utils::HashMap,
 };
 
-use crate::WolfEntity;
+use crate::{WolfEntity};
 
 #[derive(TypeUuid, TypePath, Debug, Clone)]
 #[uuid = "8a6ed18a-13d6-45b1-8ba7-ede1b13500c5"]
@@ -14,6 +14,20 @@ pub struct WolfMap {
     pub layers: Vec<Array2D<Option<WolfEntity>>>,
     pub width: u32,
     pub height: u32,
+}
+
+impl WolfMap {
+    pub fn get(&self, index:UVec2) -> Vec<&WolfEntity> {
+        let mut v = Vec::new();
+        for layer in self.layers.iter() {
+            if let Some(tile) = layer.get(index.y as usize, index.x as usize) {
+                if let Some(tile) = tile {
+                    v.push(tile);
+                }
+            }
+        }
+        return v;
+    }
 }
 
 impl Default for WolfMap {
@@ -69,8 +83,9 @@ impl AssetLoader for WolfMapAssetLoader {
                                 tiled_tile_layer.get_tile(x as i32, y as i32)
                             {
                                 if let Some(tiled_tile) = tiled_layer_tile.get_tile() {
-                                    let tile = layer.get_mut(y as usize, x as usize).unwrap();
                                     let y = height - y - 1;
+                                    let tile = layer.get_mut(y as usize, x as usize).unwrap();
+
                                     let mut classes:HashMap<String, ()> = HashMap::default();
                                     for class in tiled_tile.user_type.clone().unwrap_or_default().split(" ") {
                                         classes.insert(class.to_string(), ());

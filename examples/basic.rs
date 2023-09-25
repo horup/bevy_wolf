@@ -28,10 +28,7 @@ fn main() {
 
 fn test_system(mut commands:Commands, mut q:Query<(Entity, &WolfEntity, &mut WolfInstance<StandardMaterial>, &mut Transform)>){
     for (e, we, mut wi, mut t) in q.iter_mut() {
-        //t.translation.x += 0.001;
-        //wi.request_redraw = true;
-        commands.entity(e).despawn();
-        break;
+        
     }
 }
 

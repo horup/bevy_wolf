@@ -41,37 +41,41 @@
  </tileset>
  <tileset firstgid="9" name="entities" tilewidth="64" tileheight="64" tilecount="7" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
-  <tile id="2" type="entity camera light">
+  <tile id="2" type="camera light">
    <image width="64" height="64" source="../images/info_player_start.png"/>
   </tile>
-  <tile id="3" type="entity">
+  <tile id="3" type="door">
+   <properties>
+    <property name="image" value="images/door_blue.png"/>
+    <property name="image2" value="images/wall_door_blue.png"/>
+   </properties>
    <image width="64" height="64" source="../images/door_blue.png"/>
   </tile>
-  <tile id="4" type="entity sprite">
+  <tile id="4" type="sprite">
    <properties>
     <property name="image" value="images/deco_barrel.png"/>
    </properties>
    <image width="64" height="64" source="../images/deco_barrel.png"/>
   </tile>
-  <tile id="5" type="entity sprite">
+  <tile id="5" type="sprite">
    <properties>
     <property name="image" value="images/deco_plant.png"/>
    </properties>
    <image width="64" height="64" source="../images/deco_plant.png"/>
   </tile>
-  <tile id="6" type="entity sprite">
+  <tile id="6" type="sprite">
    <properties>
     <property name="image" value="images/item_treasure_cross.png"/>
    </properties>
    <image width="64" height="64" source="../images/item_treasure_cross.png"/>
   </tile>
-  <tile id="7" type="entity sprite light">
+  <tile id="7" type="sprite light">
    <properties>
     <property name="image" value="images/deco_lamp_floor.png"/>
    </properties>
    <image width="64" height="64" source="../images/deco_lamp_floor.png"/>
   </tile>
-  <tile id="8" type="entity light sprite">
+  <tile id="8" type="light sprite">
    <properties>
     <property name="image" value="images/deco_lamp_loft.png"/>
    </properties>
@@ -152,7 +156,7 @@
 0,16,0,0,13,13,0,0,14,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,14,0,0,0,16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,11,17,15,15,15,17,15,12,15,15,17,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,11,17,15,15,15,17,15,1610612748,15,15,17,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,14,0,0,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,17,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,15,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

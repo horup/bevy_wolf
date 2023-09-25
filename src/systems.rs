@@ -4,7 +4,7 @@ use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfInstance, WolfInstanceManager, WolfSprite,
-    WolfThing, WolfTile, WolfWorld,
+    WolfThing, WolfWorld,
 };
 
 use bevy::{
@@ -63,6 +63,7 @@ pub fn spawn_system(
     spawns: Query<(Entity, &WolfEntity), Added<WolfEntity>>,
     ass: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    world: ResMut<WolfWorld>,
 ) {
     let block_mesh: Handle<Mesh> = ass.load("meshes/block.gltf#Mesh0/Primitive0");
     let sprite_mesh: Handle<Mesh> = ass.load("meshes/sprite.gltf#Mesh0/Primitive0");
@@ -141,6 +142,34 @@ pub fn spawn_system(
                     ..Default::default()
                 })
                 .insert(WolfSprite {});
+        }
+
+        if we.has_class("door") {
+            let mut transform = Transform::from_xyz(we.pos.x, we.pos.y, 0.0)
+                .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z);
+            let right = we.index + UVec2::new(1, 0);
+            let tiles = world.map.get(right);
+            for tile in tiles {
+                if tile.has_class("block") {
+                    dbg!(&tile.index);
+                    dbg!(&tile.classes);
+                    transform.look_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z)
+                }
+            }
+            entity.insert(PbrBundle {
+                mesh: sprite_mesh.clone(),
+                material: materials.add(StandardMaterial {
+                    alpha_mode: AlphaMode::Blend,
+                    perceptual_roughness: 1.0,
+                    metallic: 0.0,
+                    cull_mode: None,
+                    base_color_texture: Some(ass.load(&we.image)),
+                    unlit: true,
+                    ..Default::default()
+                }),
+                transform,
+                ..Default::default()
+            });
         }
     }
 }
