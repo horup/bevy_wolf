@@ -310,6 +310,7 @@ pub fn instance_manager_spawn_system(
             .spawn(WolfInstanceManager {
                 instance: ins.clone(),
                 request_redraw: true,
+                count: 0,
             })
             .insert(PbrBundle {
                 mesh,
@@ -349,10 +350,15 @@ pub fn instance_manage_render_system(
             continue;
         }
 
+        if count != instance_manager.count {
+            instance_manager.request_redraw = true;
+            instance_manager.count = count;
+        }
+
         if instance_manager.request_redraw {
             let mut instance_mesh = meshes.get(&instance_manager.instance.mesh).unwrap().clone();
             instance_mesh.duplicate_vertices();
-            let vertex_count = instance_mesh.count_vertices();
+            let vertex_count = instance_mesh.count_vertices() as u32;
             let VertexAttributeValues::Float32x3(positions) =
                 instance_mesh.attribute(Mesh::ATTRIBUTE_POSITION).unwrap()
             else {
@@ -369,10 +375,11 @@ pub fn instance_manage_render_system(
                 panic!()
             };
 
-            let mut new_positions: Vec<[f32; 3]> = Vec::with_capacity(count * vertex_count);
-            let mut new_uvs: Vec<[f32; 2]> = Vec::with_capacity(count * vertex_count);
-            let mut new_normals: Vec<[f32; 3]> = Vec::with_capacity(count * vertex_count);
-            let mut indicies: Vec<u32> = Vec::with_capacity(count * vertex_count);
+            let l = count as usize * vertex_count as usize;
+            let mut new_positions: Vec<[f32; 3]> = Vec::with_capacity(l);
+            let mut new_uvs: Vec<[f32; 2]> = Vec::with_capacity(l);
+            let mut new_normals: Vec<[f32; 3]> = Vec::with_capacity(l);
+            let mut indicies: Vec<u32> = Vec::with_capacity(l);
 
             for (instance, transform) in instances.iter() {
                 if instance_manager.instance == *instance {
@@ -385,7 +392,7 @@ pub fn instance_manage_render_system(
                     for uv in uvs {
                         new_uvs.push(uv.clone());
                     }
-                    for p in positions {
+                    for p in normals {
                         new_normals.push(p.clone());
                     }
                 }

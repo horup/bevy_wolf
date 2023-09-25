@@ -22,8 +22,17 @@ fn main() {
         }))
         .add_plugins(WolfPlugin)
         .add_systems(Startup, startup_system)
-        .add_systems(Update, input_system)
+        .add_systems(Update, (input_system, test_system))
         .run();
+}
+
+fn test_system(mut commands:Commands, mut q:Query<(Entity, &WolfEntity, &mut WolfInstance<StandardMaterial>, &mut Transform)>){
+    for (e, we, mut wi, mut t) in q.iter_mut() {
+        //t.translation.x += 0.001;
+        //wi.request_redraw = true;
+        commands.entity(e).despawn();
+        break;
+    }
 }
 
 fn input_system(keys:Res<Input<KeyCode>>, mut windows:Query<&mut Window>) {

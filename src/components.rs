@@ -71,7 +71,8 @@ impl<M:Material + Asset> std::hash::Hash for WolfInstance<M> {
 #[derive(Component)]
 pub struct WolfInstanceManager<M:Material + Asset> {
     pub instance:WolfInstance<M>,
-    pub request_redraw:bool
+    pub request_redraw:bool,
+    pub count:u32
 }
 
 #[derive(Component)]
