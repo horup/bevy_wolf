@@ -48,7 +48,7 @@ impl WolfEntity {
 pub struct WolfInstance<M:Material + Asset> {
     pub mesh:Handle<Mesh>,
     pub material:Handle<M>,
-    pub requires_update:bool
+    pub redraw:bool
 }
 
 impl<M:Material + Asset> PartialEq for WolfInstance<M> {

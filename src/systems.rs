@@ -115,7 +115,7 @@ pub fn spawn_system(
                 .insert(WolfInstance {
                     mesh: block_mesh.clone(),
                     material,
-                    requires_update: true,
+                    redraw: true,
                     ..Default::default()
                 })
                 .insert(
@@ -322,25 +322,37 @@ pub fn instance_manager_spawn_system(
 }
 
 pub fn instance_manage_render_system(
-    instances: Query<(&WolfInstance<StandardMaterial>, &Transform)>,
+    mut commands: Commands,
+    mut instances: Query<(&mut WolfInstance<StandardMaterial>, &Transform)>,
     mut instance_managers: Query<(
+        Entity,
         &mut WolfInstanceManager<StandardMaterial>,
         &Handle<Mesh>,
         &mut Aabb,
     )>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    for (mut instance_manager, mesh, mut aabb) in instance_managers.iter_mut() {
+    for (entity, mut instance_manager, mesh, mut aabb) in instance_managers.iter_mut() {
         let mut count = 0;
-        for (instance, _) in instances.iter() {
+        for (mut instance, _) in instances.iter_mut() {
             if instance_manager.instance == *instance {
                 count += 1;
+                if instance.redraw {
+                    instance_manager.redraw = true;
+                    instance.redraw = false;
+                }
             }
+        }
+
+        if count == 0 {
+            commands.entity(entity).despawn_recursive();
+            continue;
         }
 
         if instance_manager.redraw {
             let mut instance_mesh = meshes.get(&instance_manager.instance.mesh).unwrap().clone();
             instance_mesh.duplicate_vertices();
+            let vertex_count = instance_mesh.count_vertices();
             let VertexAttributeValues::Float32x3(positions) =
                 instance_mesh.attribute(Mesh::ATTRIBUTE_POSITION).unwrap()
             else {
@@ -357,10 +369,10 @@ pub fn instance_manage_render_system(
                 panic!()
             };
 
-            let mut new_positions: Vec<[f32; 3]> = Vec::with_capacity(count);
-            let mut new_uvs: Vec<[f32; 2]> = Vec::with_capacity(count);
-            let mut new_normals: Vec<[f32; 3]> = Vec::with_capacity(count);
-            let mut indicies: Vec<u32> = Vec::with_capacity(count);
+            let mut new_positions: Vec<[f32; 3]> = Vec::with_capacity(count * vertex_count);
+            let mut new_uvs: Vec<[f32; 2]> = Vec::with_capacity(count * vertex_count);
+            let mut new_normals: Vec<[f32; 3]> = Vec::with_capacity(count * vertex_count);
+            let mut indicies: Vec<u32> = Vec::with_capacity(count * vertex_count);
 
             for (instance, transform) in instances.iter() {
                 if instance_manager.instance == *instance {
@@ -393,7 +405,7 @@ pub fn instance_manage_render_system(
                 if instance_manager.instance == *instance {}
             }
 
-            instance_manager.redraw = true;
+            instance_manager.redraw = false;
         }
     }
 }
