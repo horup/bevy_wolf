@@ -10,7 +10,11 @@ use crate::{
 use bevy::{
     input::mouse::MouseMotion,
     prelude::*,
-    utils::{petgraph::dot::Config, HashMap}, render::{mesh::{Indices, VertexAttributeValues}, primitives::Aabb},
+    render::{
+        mesh::{Indices, VertexAttributeValues},
+        primitives::Aabb,
+    },
+    utils::{petgraph::dot::Config, HashMap},
 };
 
 pub fn startup_system(
@@ -114,11 +118,10 @@ pub fn spawn_system(
                     requires_update: true,
                     ..Default::default()
                 })
-                .insert(Transform::from_xyz(
-                    we.index.x as f32,
-                    we.index.y as f32,
-                    0.0,
-                ).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z));
+                .insert(
+                    Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0)
+                        .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+                );
         }
 
         if we.has_class("sprite") {
@@ -286,7 +289,7 @@ pub fn instance_manager_spawn_system(
     mut commands: Commands,
     instance_managers: Query<&WolfInstanceManager<StandardMaterial>>,
     instances: Query<(&WolfInstance<StandardMaterial>, &Transform)>,
-    mut meshes: ResMut<Assets<Mesh>>
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     let mut existing = HashMap::new();
     for wi in instance_managers.iter() {
@@ -320,33 +323,49 @@ pub fn instance_manager_spawn_system(
 
 pub fn instance_manage_render_system(
     instances: Query<(&WolfInstance<StandardMaterial>, &Transform)>,
-    mut instance_managers: Query<(&mut WolfInstanceManager<StandardMaterial>, &Handle<Mesh>, &mut Aabb)>,
-    mut meshes:ResMut<Assets<Mesh>>,
+    mut instance_managers: Query<(
+        &mut WolfInstanceManager<StandardMaterial>,
+        &Handle<Mesh>,
+        &mut Aabb,
+    )>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for (mut instance_manager, mesh, mut aabb) in instance_managers.iter_mut() {
-        if instance_manager.redraw {
-            let mut count = 0;
-            for (instance, transform) in instances.iter() {
-                if instance_manager.instance == *instance {
-                    count += 1;
-                }
+        let mut count = 0;
+        for (instance, _) in instances.iter() {
+            if instance_manager.instance == *instance {
+                count += 1;
             }
+        }
 
+        if instance_manager.redraw {
             let mut instance_mesh = meshes.get(&instance_manager.instance.mesh).unwrap().clone();
             instance_mesh.duplicate_vertices();
-            let VertexAttributeValues::Float32x3(positions) = instance_mesh.attribute(Mesh::ATTRIBUTE_POSITION).unwrap() else { panic!()};
-            let VertexAttributeValues::Float32x2(uvs) = instance_mesh.attribute(Mesh::ATTRIBUTE_UV_0).unwrap() else { panic!()};
-            let VertexAttributeValues::Float32x3(normals) = instance_mesh.attribute(Mesh::ATTRIBUTE_NORMAL).unwrap() else { panic!()};
+            let VertexAttributeValues::Float32x3(positions) =
+                instance_mesh.attribute(Mesh::ATTRIBUTE_POSITION).unwrap()
+            else {
+                panic!()
+            };
+            let VertexAttributeValues::Float32x2(uvs) =
+                instance_mesh.attribute(Mesh::ATTRIBUTE_UV_0).unwrap()
+            else {
+                panic!()
+            };
+            let VertexAttributeValues::Float32x3(normals) =
+                instance_mesh.attribute(Mesh::ATTRIBUTE_NORMAL).unwrap()
+            else {
+                panic!()
+            };
 
-            let mut new_positions:Vec<[f32;3]> = Vec::with_capacity(count);
-            let mut new_uvs:Vec<[f32;2]> = Vec::with_capacity(count);
-            let mut new_normals:Vec<[f32;3]> = Vec::with_capacity(count);
-            let mut indicies:Vec<u32> = Vec::with_capacity(count);
+            let mut new_positions: Vec<[f32; 3]> = Vec::with_capacity(count);
+            let mut new_uvs: Vec<[f32; 2]> = Vec::with_capacity(count);
+            let mut new_normals: Vec<[f32; 3]> = Vec::with_capacity(count);
+            let mut indicies: Vec<u32> = Vec::with_capacity(count);
 
             for (instance, transform) in instances.iter() {
                 if instance_manager.instance == *instance {
                     for p in positions {
-                        let p:Vec3 = p.clone().into();
+                        let p: Vec3 = p.clone().into();
                         let p = transform.transform_point(p);
                         new_positions.push(p.into());
                         indicies.push(indicies.len() as u32);
@@ -371,12 +390,10 @@ pub fn instance_manage_render_system(
             }
 
             for (instance, transform) in instances.iter() {
-                if instance_manager.instance == *instance {
-
-                }
+                if instance_manager.instance == *instance {}
             }
 
-            instance_manager.redraw = false;
+            instance_manager.redraw = true;
         }
     }
 }
