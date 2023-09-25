@@ -47,7 +47,8 @@ impl WolfEntity {
 #[derive(Component, Default, Clone)]
 pub struct WolfInstance<M:Material + Asset> {
     pub mesh:Handle<Mesh>,
-    pub material:Handle<M>
+    pub material:Handle<M>,
+    pub requires_update:bool
 }
 
 impl<M:Material + Asset> PartialEq for WolfInstance<M> {
@@ -69,7 +70,8 @@ impl<M:Material + Asset> std::hash::Hash for WolfInstance<M> {
 
 #[derive(Component)]
 pub struct WolfInstanceManager<M:Material + Asset> {
-    pub instance:WolfInstance<M>
+    pub instance:WolfInstance<M>,
+    pub redraw:bool
 }
 
 #[derive(Component)]
