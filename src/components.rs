@@ -22,6 +22,7 @@ pub struct WolfThing {
 
 #[derive(Component, Default, Clone)]
 pub struct WolfSprite {
+    pub index:f32
 }
 
 #[derive(Component, Default, Clone, Debug)]

@@ -116,10 +116,10 @@ pub fn spawn_system(
         }
 
         if we.has_class("sprite") {
-            let atlas = assets.atlas_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
+            let atlas = assets.sprite_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
             entity
                 .insert(PbrBundle {
-                    mesh: atlas.index(0).unwrap().clone(),
+                    mesh:atlas.index(0),
                     material: materials.add(StandardMaterial {
                         alpha_mode: AlphaMode::Blend,
                         perceptual_roughness: 1.0,
@@ -132,7 +132,7 @@ pub fn spawn_system(
                     transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.5).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 }).insert(WolfSprite {
-
+                    index:0.0
                 });
         }
 
@@ -167,14 +167,19 @@ pub fn spawn_system(
 }
 
 pub fn sprite_system(
-    sprites: Query<Entity, With<WolfSprite>>,
+    mut sprites: Query<(Entity, &WolfSprite, &mut Handle<Mesh>, &WolfEntity)>,
     mut transforms: Query<&mut Transform>,
     cameras: Query<Entity, With<Camera3d>>,
+    mut assets:ResMut<WolfAssets>,
+    mut meshes:ResMut<Assets<Mesh>>,
 ) {
     for camera in cameras.iter() {
         let camera_transform = transforms.get(camera).unwrap().clone();
-        for sprite in sprites.iter() {
-            if let Ok(mut transform) = transforms.get_mut(sprite) {
+        for (entity, sprite, mut mesh_handle, we) in sprites.iter_mut() {
+            if let Ok(mut transform) = transforms.get_mut(entity) {
+                let atlas = assets.sprite_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
+                let handle = atlas.index(sprite.index as u16);
+                *mesh_handle = handle;
                 let z = transform.translation.z;
                 transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
             }
@@ -244,14 +249,6 @@ fn load_map_system(
         ..Default::default()
     });
 
-    // spawn camera
-    /*commands
-    .spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 50.0)
-            .looking_to(Vec3::new(0.0, 0.0, -1.0), Vec3::Z),
-        ..Default::default()
-    })
-    .insert(WolfEntity);*/
 }
 
 pub fn camera_system(

@@ -52,26 +52,28 @@ pub struct WolfAssets {
     pub meshes: AssetMap<Mesh>,
     pub standard_materials: AssetMap<StandardMaterial>,
     pub images: AssetMap<Image>,
-    pub atlas_meshes:WolfAtlaseMeshes
+    pub sprite_meshes:WolfAtlaseMeshes
 }
 
 #[derive(Default)]
 pub struct WolfAtlaseMeshes {
-    atlas_meshes:HashMap<(u8, u8), WolfAtlasMesh>
+    atlas_meshes:HashMap<(u8, u8), WolfSpriteMesh>
 }
 
 impl WolfAtlaseMeshes {
-    pub fn get(&mut self, atlas_height:u8, atlas_width:u8, assets_mesh:&mut Assets<Mesh>) -> &WolfAtlasMesh {
+    pub fn get(&mut self, atlas_height:u8, atlas_width:u8, assets_mesh:&mut Assets<Mesh>) -> &WolfSpriteMesh {
         if self.atlas_meshes.contains_key(&(atlas_height, atlas_width)) == false {
             let mut meshes = Vec::new();
             for y in 0..atlas_height {
                 for x in 0..atlas_width {
                     let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList);
                     let s = 0.5;
+                    let a = 0.001;
                     let w = 1.0 / atlas_width as f32;
                     let h = 1.0 / atlas_height as f32;
                     let u = x as f32 * w;
                     let v = y as f32 * h;
+                    
                     mesh.set_indices(Some(Indices::U16(vec![0, 1, 2, 0, 2, 3])));
                     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vec![[-s, s, 0.0], [-s, -s, 0.0], [s, -s, 0.0], [s, s, 0.0]]);
                     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]]);
@@ -79,7 +81,7 @@ impl WolfAtlaseMeshes {
                     meshes.push(assets_mesh.add(mesh));
                 }
             }
-            let wam = WolfAtlasMesh {
+            let wam = WolfSpriteMesh {
                 meshes
             };
             self.atlas_meshes.insert((atlas_height, atlas_width), wam);
@@ -89,17 +91,14 @@ impl WolfAtlaseMeshes {
     }
 }
 
-pub struct WolfAtlasMesh {
+pub struct WolfSpriteMesh {
     pub meshes:Vec<Handle<Mesh>>
 }
 
-impl WolfAtlasMesh {
-    pub fn index(&self, index:u16) -> Option<Handle<Mesh>> {
-        if let Some(h) = self.meshes.get(index as usize) {
-            return Some(h.clone());
-        }
-
-        None
+impl WolfSpriteMesh {
+    pub fn index(&self, index:u16) -> Handle<Mesh> {
+        let index = index as usize % self.meshes.len(); 
+        self.meshes.get(index).unwrap().clone()
     }
 }
 

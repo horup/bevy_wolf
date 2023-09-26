@@ -26,9 +26,9 @@ fn main() {
         .run();
 }
 
-fn test_system(mut commands:Commands, mut q:Query<(Entity, &WolfEntity, &mut WolfInstance<StandardMaterial>, &mut Transform)>){
-    for (e, we, mut wi, mut t) in q.iter_mut() {
-        
+fn test_system(mut q:Query<&mut WolfSprite>, time:Res<Time>){
+    for mut s in q.iter_mut() {
+        s.index += time.delta_seconds();
     }
 }
 
