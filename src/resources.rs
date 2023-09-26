@@ -68,7 +68,7 @@ impl WolfAtlaseMeshes {
                 for x in 0..atlas_width {
                     let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList);
                     let s = 0.5;
-                    let a = 0.001;
+                    let a = 1.0 / 1024.0;
                     let w = 1.0 / atlas_width as f32;
                     let h = 1.0 / atlas_height as f32;
                     let u = x as f32 * w;
@@ -77,7 +77,7 @@ impl WolfAtlaseMeshes {
                     mesh.set_indices(Some(Indices::U16(vec![0, 1, 2, 0, 2, 3])));
                     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vec![[-s, s, 0.0], [-s, -s, 0.0], [s, -s, 0.0], [s, s, 0.0]]);
                     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]]);
-                    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[u, v], [u, v+h], [u+w, v+h], [u+w, v]]);
+                    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[u + a, v + a], [u + a, v+h - a], [u+w - a, v+h - a], [u+w - a, v + a]]);
                     meshes.push(assets_mesh.add(mesh));
                 }
             }
