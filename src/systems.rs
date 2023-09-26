@@ -63,7 +63,9 @@ pub fn spawn_system(
     spawns: Query<(Entity, &WolfEntity), Added<WolfEntity>>,
     ass: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
     world: ResMut<WolfWorld>,
+    mut assets:ResMut<WolfAssets>
 ) {
     let block_mesh: Handle<Mesh> = ass.load("meshes/block.gltf#Mesh0/Primitive0");
     let sprite_mesh: Handle<Mesh> = ass.load("meshes/sprite.gltf#Mesh0/Primitive0");
@@ -85,18 +87,6 @@ pub fn spawn_system(
         }
 
         if we.has_class("block") {
-            /*entity.insert(PbrBundle {
-                mesh:block_mesh.clone(),
-                material:materials.add(StandardMaterial {
-                    perceptual_roughness:1.0,
-                    metallic:0.0,
-                    base_color_texture:Some(ass.load(&we.image)),
-                    unlit:true,
-                    ..Default::default()
-                }),
-                transform:Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0).looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
-                ..Default::default()
-            });*/
             let material = match existing_materials.get(&Some(ass.load(&we.image))) {
                 Some(h) => materials.get_handle(*h),
                 None => {
@@ -126,22 +116,24 @@ pub fn spawn_system(
         }
 
         if we.has_class("sprite") {
+            let atlas = assets.atlas_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
             entity
                 .insert(PbrBundle {
-                    mesh: sprite_mesh.clone(),
+                    mesh: atlas.index(0).unwrap().clone(),
                     material: materials.add(StandardMaterial {
                         alpha_mode: AlphaMode::Blend,
                         perceptual_roughness: 1.0,
                         metallic: 0.0,
+                        cull_mode:None,
                         base_color_texture: Some(ass.load(&we.image)),
                         unlit: true,
                         ..Default::default()
                     }),
-                    transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.0)
-                        .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+                    transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.5).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
-                })
-                .insert(WolfSprite {});
+                }).insert(WolfSprite {
+
+                });
         }
 
         if we.has_class("door") {
@@ -183,10 +175,8 @@ pub fn sprite_system(
         let camera_transform = transforms.get(camera).unwrap().clone();
         for sprite in sprites.iter() {
             if let Ok(mut transform) = transforms.get_mut(sprite) {
-                //let t = transform.translation - camera_transform.translation;
                 let z = transform.translation.z;
                 transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
-                transform.rotate_z(PI / 2.0);
             }
         }
     }

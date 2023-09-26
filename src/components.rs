@@ -27,6 +27,8 @@ pub struct WolfSprite {
 #[derive(Component, Default, Clone, Debug)]
 pub struct WolfEntity {
     pub image: String,
+    pub atlas_width:u8,
+    pub atlas_height:u8,
     pub classes: HashMap<String, ()>,
     pub pos: Vec3,
     pub index: UVec2

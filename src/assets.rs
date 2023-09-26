@@ -5,8 +5,9 @@ use bevy::{
     reflect::{TypePath, TypeUuid},
     utils::HashMap,
 };
+use tiled::PropertyValue;
 
-use crate::{WolfEntity};
+use crate::WolfEntity;
 
 #[derive(TypeUuid, TypePath, Debug, Clone)]
 #[uuid = "8a6ed18a-13d6-45b1-8ba7-ede1b13500c5"]
@@ -94,9 +95,25 @@ impl AssetLoader for WolfMapAssetLoader {
                                         tiled::PropertyValue::StringValue(s) => Some(s.clone()),
                                         _=> None
                                     }).unwrap_or_default();
+
+                                    let mut atlas_width = 1;
+                                    let mut atlas_height = 1;
+                                    if let Some(v) = tiled_tile.properties.get("atlas_width") {
+                                        if let PropertyValue::IntValue(i) = v {
+                                            atlas_width = *i as u8;
+                                        }
+                                    }
+                                    if let Some(v) = tiled_tile.properties.get("atlas_height") {
+                                        if let PropertyValue::IntValue(i) = v {
+                                            atlas_height = *i as u8;
+                                        }
+                                    }
+
                                     *tile = Some(WolfEntity {
                                         image,
                                         classes,
+                                        atlas_width,
+                                        atlas_height,
                                         pos: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0),
                                         index: UVec2::new(x, y)
                                     });
@@ -122,6 +139,7 @@ impl AssetLoader for WolfMapAssetLoader {
         &["tmx"]
     }
 }
+
 
 pub fn build_assets(app: &mut App) {
     app.add_asset::<WolfMap>();
