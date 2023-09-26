@@ -83,8 +83,8 @@
   </tile>
   <tile id="9" type="sprite">
    <properties>
-    <property name="atlas_height" value="7"/>
-    <property name="atlas_width" value="8"/>
+    <property name="atlas_height" type="int" value="7"/>
+    <property name="atlas_width" type="int" value="8"/>
     <property name="image" value="images/enemy_blue_guard.png"/>
    </properties>
    <image width="64" height="64" source="../images/enemy_blue_guard_tile.png"/>
