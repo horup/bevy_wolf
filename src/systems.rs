@@ -129,9 +129,10 @@ pub fn spawn_system(
                         unlit: true,
                         ..Default::default()
                     }),
-                    transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.5).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+                    transform: Transform::default().looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 }).insert(WolfSprite {
+                    offset:Vec3::new(0.0, 0.0, 0.5),
                     ..Default::default()
                 });
         }
@@ -178,6 +179,7 @@ pub fn sprite_system(
                 let atlas = assets.sprite_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
                 let handle = atlas.index(sprite.index as u16);
                 *mesh_handle = handle;
+                transform.translation = Vec3::new(we.pos.x, we.pos.y, we.pos.z) + sprite.offset;
                 let z = transform.translation.z;
                 transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
             }

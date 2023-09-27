@@ -23,6 +23,7 @@ pub struct WolfThing {
 #[derive(Component, Default, Clone)]
 pub struct WolfSprite {
     pub index:f32,
+    pub offset:Vec3
 }
 
 #[derive(Component, Default, Clone, Debug)]
@@ -31,6 +32,9 @@ pub struct WolfEntity {
     pub atlas_width:u8,
     pub atlas_height:u8,
     pub classes: HashMap<String, ()>,
+    pub properties_float: HashMap<String, f32>,
+    pub properties_int: HashMap<String, i32>,
+    pub properties_string: HashMap<String, String>,
     pub pos: Vec3,
     pub index: UVec2,
     pub facing: f32

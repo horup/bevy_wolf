@@ -116,6 +116,25 @@ impl AssetLoader for WolfMapAssetLoader {
                                         }
                                     }
 
+                                    let mut properties_float:HashMap<String, f32> = HashMap::new();
+                                    let mut properties_int:HashMap<String, i32> = HashMap::new();
+                                    let mut properties_string:HashMap<String, String> = HashMap::new();
+
+                                    for (p, v) in tiled_tile.properties.iter() {
+                                        match v {
+                                            PropertyValue::FloatValue(v) => {
+                                                properties_float.insert(p.clone(), *v);
+                                            },
+                                            PropertyValue::IntValue(v) => {
+                                                properties_int.insert(p.clone(), *v);
+                                            },
+                                            PropertyValue::StringValue(v) => {
+                                                properties_string.insert(p.clone(), v.clone());
+                                            },
+                                            _ => {}
+                                        };
+                                    }
+
                                     *tile = Some(WolfEntity {
                                         image,
                                         classes,
@@ -123,6 +142,9 @@ impl AssetLoader for WolfMapAssetLoader {
                                         atlas_height,
                                         pos: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0),
                                         index: UVec2::new(x, y),
+                                        properties_float,
+                                        properties_int,
+                                        properties_string,
                                         facing,
                                     });
                                 }
