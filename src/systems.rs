@@ -107,7 +107,7 @@ pub fn spawn_system(
                         ..Default::default()
                     })
                     .insert(
-                        Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0)
+                        Transform::from_xyz(we.pos.x as f32, we.pos.y as f32, 0.0)
                             .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
                     );
             }
@@ -130,12 +130,11 @@ pub fn spawn_system(
                         perceptual_roughness: 1.0,
                         metallic: 0.0,
                         cull_mode: None,
-                        base_color_texture: image.and_then(|x|Some(ass.load(x))),
+                        base_color_texture: image.and_then(|x| Some(ass.load(x))),
                         unlit: true,
                         ..Default::default()
                     }),
-                    transform: Transform::default()
-                        .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+                    transform: Transform::default().looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 })
                 .insert(WolfSprite {
@@ -149,13 +148,6 @@ pub fn spawn_system(
         if we.has_class("door") {
             let mut transform = Transform::from_xyz(we.pos.x, we.pos.y, 0.5)
                 .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z);
-            let right = we.index + UVec2::new(1, 0);
-            let tiles = world.map.get(right);
-            for tile in tiles {
-                if tile.has_class("block") {
-                    transform.look_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z)
-                }
-            }
             entity.insert(PbrBundle {
                 mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
                 material: materials.add(StandardMaterial {
@@ -163,7 +155,7 @@ pub fn spawn_system(
                     perceptual_roughness: 1.0,
                     metallic: 0.0,
                     cull_mode: None,
-                    base_color_texture: image.and_then(|x|Some(ass.load(x))),
+                    base_color_texture: image.and_then(|x| Some(ass.load(x))),
                     unlit: true,
                     ..Default::default()
                 }),
@@ -172,8 +164,7 @@ pub fn spawn_system(
             });
         }
 
-        if we.has_class("body") {
-        }
+        if we.has_class("body") {}
     }
 }
 
@@ -188,9 +179,10 @@ pub fn sprite_system(
         let camera_transform = transforms.get(camera).unwrap().clone();
         for (entity, sprite, mut mesh_handle, we) in sprites.iter_mut() {
             if let Ok(mut transform) = transforms.get_mut(entity) {
-                let atlas = assets
-                    .sprite_meshes
-                    .get(sprite.atlas_height, sprite.atlas_width, &mut meshes);
+                let atlas =
+                    assets
+                        .sprite_meshes
+                        .get(sprite.atlas_height, sprite.atlas_width, &mut meshes);
                 let handle = atlas.index(sprite.index as u16);
                 *mesh_handle = handle;
                 transform.translation = Vec3::new(we.pos.x, we.pos.y, we.pos.z) + sprite.offset;
@@ -468,7 +460,11 @@ pub fn debug_gizmos_system(
     }
 }
 
-pub fn spatial_hash_system(mut world:ResMut<WolfWorld>, entities:Query<(Entity, &WolfEntity)>, time:Res<Time>) {
+pub fn spatial_hash_system(
+    mut world: ResMut<WolfWorld>,
+    entities: Query<(Entity, &WolfEntity)>,
+    time: Res<Time>,
+) {
     world.grid.clear();
     for (e, we) in entities.iter() {
         world.grid.insert(e, we.pos);

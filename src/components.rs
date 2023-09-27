@@ -35,7 +35,6 @@ pub struct WolfEntity {
     pub properties_int: HashMap<String, i32>,
     pub properties_string: HashMap<String, String>,
     pub pos: Vec3,
-    pub index: UVec2,
     pub facing: f32
 }
 
