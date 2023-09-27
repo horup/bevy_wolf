@@ -70,12 +70,13 @@ pub fn spawn_system(
         existing_materials.insert(material.base_color_texture.clone(), id.clone());
     }
     for (e, we) in spawns.iter() {
+        let mut transform = Transform::from_xyz(we.start_pos.x, we.start_pos.y, we.start_pos.z).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z);
         let mut entity = commands.entity(e);
         let image = we.get_property_string("image");
         if we.has_class("camera") {
             entity
                 .insert(Camera3dBundle {
-                    transform: Transform::default().looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+                    transform,
                     ..Default::default()
                 })
                 .insert(WolfCamera::default());
@@ -105,7 +106,7 @@ pub fn spawn_system(
                         request_redraw: true,
                         ..Default::default()
                     })
-                    .insert(Transform::default().looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z));
+                    .insert(transform);
             }
         }
 
@@ -130,7 +131,7 @@ pub fn spawn_system(
                         unlit: true,
                         ..Default::default()
                     }),
-                    transform: Transform::default().looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+                    transform,
                     ..Default::default()
                 })
                 .insert(WolfSprite {
@@ -141,9 +142,7 @@ pub fn spawn_system(
         }
 
         if we.has_class("door") {
-            let mut transform = Transform::default()
-                .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z);
-            let right = we.origin.as_uvec3().truncate() + UVec2::new(1, 0);
+            let right = we.start_pos.as_uvec3().truncate() + UVec2::new(1, 0);
             let tiles = world.map.get(right);
             for tile in tiles {
                 if tile.has_class("block") {
@@ -169,6 +168,8 @@ pub fn spawn_system(
         if we.has_class("body") {
 
         }
+
+
     }
 }
 
@@ -190,7 +191,7 @@ pub fn sprite_system(
                 let handle = atlas.index(sprite.index as u16);
                 *mesh_handle = handle;
                 transform.translation =
-                    Vec3::new(we.origin.x, we.origin.y, we.origin.z);
+                    Vec3::new(we.start_pos.x, we.start_pos.y, we.start_pos.z);
                 let z = transform.translation.z;
                 transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
             }
@@ -307,7 +308,7 @@ pub fn camera_system(
         let speed = 10.0;
         transform.translation += forward * v.y * dt * speed;
         transform.translation += side * v.x * dt * speed;
-        we.origin = transform.translation;
+        we.start_pos = transform.translation;
         break;
     }
 }
@@ -447,7 +448,7 @@ pub fn instance_manage_render_system(
 pub fn debug_gizmos_system(
     mut gizmos: Gizmos,
     _time: Res<Time>,
-    sprites: Query<&WolfEntity, With<WolfSprite>>,
+    sprites: Query<&Transform, With<WolfSprite>>,
     config: Res<WolfConfig>,
 ) {
     // draw origin
@@ -457,9 +458,11 @@ pub fn debug_gizmos_system(
 
     if config.show_dev {
         for s in sprites.iter() {
+            let r = s.rotation * Vec3::new(1.0, 0.0, 0.0);
+
             gizmos.ray(
-                s.origin,
-                Vec3::new(s.facing.cos(), s.facing.sin(), 0.0),
+                s.translation,
+                r,
                 Color::RED,
             );
         }
@@ -473,16 +476,10 @@ pub fn spatial_hash_system(
 ) {
     world.grid.clear();
     for (e, we) in entities.iter() {
-        world.grid.insert(e, we.origin);
+        world.grid.insert(e, we.start_pos);
     }
 
     let c = world.grid.query_around(Vec3::default(), 5.0).count();
-}
-
-pub fn transform_system(mut entities: Query<(&WolfEntity, &mut Transform)>) {
-    for (e, mut t) in entities.iter_mut() {
-        t.translation = e.origin;
-    }
 }
 
 pub fn build_systems(app: &mut App) {
@@ -492,7 +489,6 @@ pub fn build_systems(app: &mut App) {
         Update,
         (
             spawn_system,
-            transform_system,
             camera_system,
             sprite_system,
             ui_system,

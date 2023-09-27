@@ -26,7 +26,7 @@ fn main() {
         .run();
 }
 
-fn test_system(mut q:Query<&mut WolfEntity, With<WolfSprite>>, time:Res<Time>, mut config:ResMut<WolfConfig>, keys:Res<Input<KeyCode>>, world:Res<WolfWorld>){
+fn test_system(mut q:Query<&mut Transform, With<WolfSprite>>, time:Res<Time>, mut config:ResMut<WolfConfig>, keys:Res<Input<KeyCode>>, world:Res<WolfWorld>){
     if keys.just_pressed(KeyCode::F9) {
         config.show_dev = !config.show_dev;
     }
@@ -35,7 +35,7 @@ fn test_system(mut q:Query<&mut WolfEntity, With<WolfSprite>>, time:Res<Time>, m
         //s.index += time.delta_seconds();
         //s.pos.x += time.delta_seconds();
         //s.facing += time.delta_seconds();
-        let iter = world.grid.query_around(s.origin, 0.1);
+        let iter = world.grid.query_around(s.translation, 0.1);
         hits += iter.count();
     }
 }

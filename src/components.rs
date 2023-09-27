@@ -24,15 +24,23 @@ pub struct WolfSprite {
 
 #[derive(Component, Default, Clone, Debug)]
 pub struct WolfEntity {
-    pub classes: Vec<String>,
-    pub properties_float: HashMap<String, f32>,
-    pub properties_int: HashMap<String, i32>,
-    pub properties_string: HashMap<String, String>,
-    pub origin: Vec3,
-    pub facing: f32
+    pub(crate) classes: Vec<String>,
+    pub(crate) properties_float: HashMap<String, f32>,
+    pub(crate) properties_int: HashMap<String, i32>,
+    pub(crate) properties_string: HashMap<String, String>,
+    pub(crate) start_pos: Vec3,
+    pub(crate) start_facing: f32
 }
 
 impl WolfEntity {
+    pub fn start_pos(&self) -> Vec3 {
+        self.start_pos
+    }
+
+    pub fn start_facing(&self) -> f32 {
+        self.start_facing
+    }
+
     pub fn has_class(&self, class: &str) -> bool {
         for c in self.classes.iter() {
             if c == class {

@@ -115,11 +115,11 @@ impl AssetLoader for WolfMapAssetLoader {
 
                                     *tile = Some(WolfEntity {
                                         classes,
-                                        origin: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.5),
+                                        start_pos: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.5),
                                         properties_float,
                                         properties_int,
                                         properties_string,
-                                        facing,
+                                        start_facing: facing,
                                     });
                                 }
                             }
