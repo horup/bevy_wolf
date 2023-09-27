@@ -6,10 +6,41 @@ use bevy::{
 
 use crate::WolfMap;
 
+
+pub struct WolfGrid {
+    spatial:flat_spatial::Grid<Entity, [f32;2]>, 
+}
+
+impl Default for WolfGrid {
+    fn default() -> Self {
+        Self { 
+            spatial:flat_spatial::Grid::new(8)
+        }
+    }
+}
+
+impl WolfGrid {
+    pub fn clear(&mut self) {
+        let _ = self.spatial.clear();
+    }
+
+    pub fn insert(&mut self, entity:Entity, pos:Vec3) {
+        self.spatial.insert([pos.x, pos.y], entity);
+    }
+
+    pub fn query_around(&mut self, pos:Vec3, radius:f32) -> impl Iterator<Item = Entity> + '_ {
+        let iter = self.spatial.query_around([pos.x, pos.y], radius);
+        let iter = iter.map(|x|*self.spatial.get(x.0).unwrap().1);
+        iter
+    }
+}
+
+
 #[derive(Default, Resource)]
 pub struct WolfWorld {
     pub updates:u64,
     pub map: WolfMap,
+    pub grid: WolfGrid,
     pub(crate) map_handle: Option<Handle<WolfMap>>,
 }
 
@@ -125,8 +156,11 @@ impl Default for WolfConfig {
     }
 }
 
+
+
 pub fn build_resources(app: &mut App) {
     app.init_resource::<WolfWorld>();
     app.init_resource::<WolfAssets>();
     app.init_resource::<WolfConfig>();
 }
+

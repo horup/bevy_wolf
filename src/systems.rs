@@ -16,7 +16,6 @@ use bevy::{
     },
     utils::{petgraph::dot::Config, HashMap},
 };
-use bevy_rapier3d::prelude::{RigidBody, Collider, Restitution};
 
 pub fn startup_system(
     mut commands: Commands,
@@ -174,8 +173,6 @@ pub fn spawn_system(
         }
 
         if we.has_class("body") {
-           dbg!("ha");
-            //.insert(Restitution::coefficient(0.7));
         }
     }
 }
@@ -471,6 +468,15 @@ pub fn debug_gizmos_system(
     }
 }
 
+pub fn spatial_hash_system(mut world:ResMut<WolfWorld>, entities:Query<(Entity, &WolfEntity)>, time:Res<Time>) {
+    world.grid.clear();
+    for (e, we) in entities.iter() {
+        world.grid.insert(e, we.pos);
+    }
+
+    let c = world.grid.query_around(Vec3::default(), 5.0).count();
+}
+
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
     app.add_systems(PreUpdate, (load_map_system).chain());
@@ -481,6 +487,7 @@ pub fn build_systems(app: &mut App) {
             camera_system,
             sprite_system,
             ui_system,
+            spatial_hash_system,
             instance_manager_spawn_system,
             instance_manage_render_system,
         )
