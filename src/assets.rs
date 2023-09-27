@@ -87,33 +87,9 @@ impl AssetLoader for WolfMapAssetLoader {
                                     let y = height - y - 1;
                                     let tile = layer.get_mut(y as usize, x as usize).unwrap();
 
-                                    let mut classes:HashMap<String, ()> = HashMap::default();
+                                    let mut classes:Vec<String> = Vec::new();
                                     for class in tiled_tile.user_type.clone().unwrap_or_default().split(" ") {
-                                        classes.insert(class.to_string(), ());
-                                    }
-                                    let image = tiled_tile.properties.get("image").and_then(|p|match p {
-                                        tiled::PropertyValue::StringValue(s) => Some(s.clone()),
-                                        _=> None
-                                    }).unwrap_or_default();
-
-                                    let mut atlas_width = 1;
-                                    let mut atlas_height = 1;
-                                    let mut facing = 0.0;
-                                    if let Some(v) = tiled_tile.properties.get("atlas_width") {
-                                        if let PropertyValue::IntValue(i) = v {
-                                            atlas_width = *i as u8;
-                                        }
-                                    }
-                                    if let Some(v) = tiled_tile.properties.get("atlas_height") {
-                                        if let PropertyValue::IntValue(i) = v {
-                                            atlas_height = *i as u8;
-                                        }
-                                    }
-
-                                    if let Some(v) = tiled_tile.properties.get("facing") {
-                                        if let PropertyValue::FloatValue(f) = v {
-                                            facing = *f as f32;
-                                        }
+                                        classes.push(class.to_string());
                                     }
 
                                     let mut properties_float:HashMap<String, f32> = HashMap::new();
@@ -134,6 +110,8 @@ impl AssetLoader for WolfMapAssetLoader {
                                             _ => {}
                                         };
                                     }
+
+                                    let facing = *properties_float.get("facing").unwrap_or(&0.0);
 
                                     *tile = Some(WolfEntity {
                                         classes,

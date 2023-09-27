@@ -30,7 +30,7 @@ pub struct WolfSprite {
 
 #[derive(Component, Default, Clone, Debug)]
 pub struct WolfEntity {
-    pub classes: HashMap<String, ()>,
+    pub classes: Vec<String>,
     pub properties_float: HashMap<String, f32>,
     pub properties_int: HashMap<String, i32>,
     pub properties_string: HashMap<String, String>,
@@ -41,7 +41,13 @@ pub struct WolfEntity {
 
 impl WolfEntity {
     pub fn has_class(&self, class: &str) -> bool {
-        self.classes.contains_key(class)
+        for c in self.classes.iter() {
+            if c == class {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     pub fn get_property_f32(&self, property:&str) -> Option<&f32> {
