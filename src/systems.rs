@@ -132,7 +132,7 @@ pub fn spawn_system(
                     transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.5).looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 }).insert(WolfSprite {
-                    index:0.0
+                    ..Default::default()
                 });
         }
 
@@ -431,11 +431,17 @@ pub fn instance_manage_render_system(
     }
 }
 
-pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>) {
+pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>, sprites:Query<&WolfEntity, With<WolfSprite>>, config:Res<WolfConfig>) {
     // draw origin
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into(), Color::BLUE);
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 1.0, 0.0).into(), Color::GREEN);
     gizmos.ray((0.0, 0.0, 0.0).into(), (1.0, 0.0, 0.0).into(), Color::RED);
+
+    if config.show_dev {
+        for s in sprites.iter() {
+            gizmos.ray(s.pos, Vec3::new(s.facing.cos(), s.facing.sin(), 0.0), Color::RED);
+        }
+    }
 }
 
 pub fn build_systems(app: &mut App) {

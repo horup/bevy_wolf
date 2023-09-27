@@ -26,9 +26,12 @@ fn main() {
         .run();
 }
 
-fn test_system(mut q:Query<&mut WolfSprite>, time:Res<Time>){
+fn test_system(mut q:Query<&mut WolfSprite>, time:Res<Time>, mut config:ResMut<WolfConfig>, keys:Res<Input<KeyCode>>){
+    if keys.just_pressed(KeyCode::F9) {
+        config.show_dev = !config.show_dev;
+    }
     for mut s in q.iter_mut() {
-        s.index += time.delta_seconds();
+        //s.index += time.delta_seconds();
     }
 }
 

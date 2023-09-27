@@ -98,6 +98,7 @@ impl AssetLoader for WolfMapAssetLoader {
 
                                     let mut atlas_width = 1;
                                     let mut atlas_height = 1;
+                                    let mut facing = 0.0;
                                     if let Some(v) = tiled_tile.properties.get("atlas_width") {
                                         if let PropertyValue::IntValue(i) = v {
                                             atlas_width = *i as u8;
@@ -109,13 +110,20 @@ impl AssetLoader for WolfMapAssetLoader {
                                         }
                                     }
 
+                                    if let Some(v) = tiled_tile.properties.get("facing") {
+                                        if let PropertyValue::FloatValue(f) = v {
+                                            facing = *f as f32;
+                                        }
+                                    }
+
                                     *tile = Some(WolfEntity {
                                         image,
                                         classes,
                                         atlas_width,
                                         atlas_height,
                                         pos: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0),
-                                        index: UVec2::new(x, y)
+                                        index: UVec2::new(x, y),
+                                        facing,
                                     });
                                 }
                             }
