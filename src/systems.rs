@@ -65,7 +65,7 @@ pub fn spawn_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
     world: ResMut<WolfWorld>,
-    mut assets:ResMut<WolfAssets>
+    mut assets: ResMut<WolfAssets>,
 ) {
     let block_mesh: Handle<Mesh> = ass.load("meshes/block.gltf#Mesh0/Primitive0");
     let sprite_mesh: Handle<Mesh> = ass.load("meshes/sprite.gltf#Mesh0/Primitive0");
@@ -76,6 +76,7 @@ pub fn spawn_system(
     }
     for (e, we) in spawns.iter() {
         let mut entity = commands.entity(e);
+        let image = we.get_property_string("image");
         if we.has_class("camera") {
             entity
                 .insert(Camera3dBundle {
@@ -87,52 +88,62 @@ pub fn spawn_system(
         }
 
         if we.has_class("block") {
-            let material = match existing_materials.get(&Some(ass.load(&we.image))) {
-                Some(h) => materials.get_handle(*h),
-                None => {
-                    let material = materials.add(StandardMaterial {
-                        perceptual_roughness: 1.0,
-                        metallic: 0.0,
-                        base_color_texture: Some(ass.load(&we.image)),
-                        unlit: true,
-                        ..Default::default()
-                    });
-                    existing_materials.insert(Some(ass.load(&we.image)), material.id());
-                    material
-                }
-            };
+            if let Some(image) = image {
+                let material = match existing_materials.get(&Some(ass.load(image))) {
+                    Some(h) => materials.get_handle(*h),
+                    None => {
+                        let material = materials.add(StandardMaterial {
+                            perceptual_roughness: 1.0,
+                            metallic: 0.0,
+                            base_color_texture: Some(ass.load(image)),
+                            unlit: true,
+                            ..Default::default()
+                        });
+                        existing_materials.insert(Some(ass.load(image)), material.id());
+                        material
+                    }
+                };
 
-            entity
-                .insert(WolfInstance {
-                    mesh: block_mesh.clone(),
-                    material,
-                    request_redraw: true,
-                    ..Default::default()
-                })
-                .insert(
-                    Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0)
-                        .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
-                );
+                entity
+                    .insert(WolfInstance {
+                        mesh: block_mesh.clone(),
+                        material,
+                        request_redraw: true,
+                        ..Default::default()
+                    })
+                    .insert(
+                        Transform::from_xyz(we.index.x as f32, we.index.y as f32, 0.0)
+                            .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+                    );
+            }
         }
 
         if we.has_class("sprite") {
-            let atlas = assets.sprite_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
+            let atlas_width = *we.get_property_int("atlas_width").unwrap_or(&1) as u8;
+            let atlas_height = *we.get_property_int("atlas_height").unwrap_or(&1) as u8;
+            let atlas = assets
+                .sprite_meshes
+                .get(atlas_height, atlas_width, &mut meshes);
             entity
                 .insert(PbrBundle {
-                    mesh:atlas.index(0),
+                    mesh: atlas.index(0),
                     material: materials.add(StandardMaterial {
                         alpha_mode: AlphaMode::Blend,
                         perceptual_roughness: 1.0,
                         metallic: 0.0,
-                        cull_mode:None,
-                        base_color_texture: Some(ass.load(&we.image)),
+                        cull_mode: None,
+                        base_color_texture: image.and_then(|x|Some(ass.load(x))),
                         unlit: true,
                         ..Default::default()
                     }),
-                    transform: Transform::default().looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+                    transform: Transform::default()
+                        .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
-                }).insert(WolfSprite {
-                    offset:Vec3::new(0.0, 0.0, 0.5),
+                })
+                .insert(WolfSprite {
+                    offset: Vec3::new(0.0, 0.0, 0.5),
+                    atlas_height,
+                    atlas_width,
                     ..Default::default()
                 });
         }
@@ -154,7 +165,7 @@ pub fn spawn_system(
                     perceptual_roughness: 1.0,
                     metallic: 0.0,
                     cull_mode: None,
-                    base_color_texture: Some(ass.load(&we.image)),
+                    base_color_texture: image.and_then(|x|Some(ass.load(x))),
                     unlit: true,
                     ..Default::default()
                 }),
@@ -169,14 +180,16 @@ pub fn sprite_system(
     mut sprites: Query<(Entity, &WolfSprite, &mut Handle<Mesh>, &WolfEntity)>,
     mut transforms: Query<&mut Transform>,
     cameras: Query<Entity, With<Camera3d>>,
-    mut assets:ResMut<WolfAssets>,
-    mut meshes:ResMut<Assets<Mesh>>,
+    mut assets: ResMut<WolfAssets>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     for camera in cameras.iter() {
         let camera_transform = transforms.get(camera).unwrap().clone();
         for (entity, sprite, mut mesh_handle, we) in sprites.iter_mut() {
             if let Ok(mut transform) = transforms.get_mut(entity) {
-                let atlas = assets.sprite_meshes.get(we.atlas_height, we.atlas_width, &mut meshes);
+                let atlas = assets
+                    .sprite_meshes
+                    .get(sprite.atlas_height, sprite.atlas_width, &mut meshes);
                 let handle = atlas.index(sprite.index as u16);
                 *mesh_handle = handle;
                 transform.translation = Vec3::new(we.pos.x, we.pos.y, we.pos.z) + sprite.offset;
@@ -248,7 +261,6 @@ fn load_map_system(
         }),
         ..Default::default()
     });
-
 }
 
 pub fn camera_system(
@@ -433,7 +445,12 @@ pub fn instance_manage_render_system(
     }
 }
 
-pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>, sprites:Query<&WolfEntity, With<WolfSprite>>, config:Res<WolfConfig>) {
+pub fn debug_gizmos_system(
+    mut gizmos: Gizmos,
+    _time: Res<Time>,
+    sprites: Query<&WolfEntity, With<WolfSprite>>,
+    config: Res<WolfConfig>,
+) {
     // draw origin
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into(), Color::BLUE);
     gizmos.ray((0.0, 0.0, 0.0).into(), (0.0, 1.0, 0.0).into(), Color::GREEN);
@@ -441,7 +458,11 @@ pub fn debug_gizmos_system(mut gizmos: Gizmos, _time: Res<Time>, sprites:Query<&
 
     if config.show_dev {
         for s in sprites.iter() {
-            gizmos.ray(s.pos, Vec3::new(s.facing.cos(), s.facing.sin(), 0.0), Color::RED);
+            gizmos.ray(
+                s.pos,
+                Vec3::new(s.facing.cos(), s.facing.sin(), 0.0),
+                Color::RED,
+            );
         }
     }
 }

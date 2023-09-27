@@ -136,10 +136,7 @@ impl AssetLoader for WolfMapAssetLoader {
                                     }
 
                                     *tile = Some(WolfEntity {
-                                        image,
                                         classes,
-                                        atlas_width,
-                                        atlas_height,
                                         pos: Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0),
                                         index: UVec2::new(x, y),
                                         properties_float,

@@ -23,14 +23,13 @@ pub struct WolfThing {
 #[derive(Component, Default, Clone)]
 pub struct WolfSprite {
     pub index:f32,
-    pub offset:Vec3
+    pub atlas_width:u8,
+    pub atlas_height:u8,
+    pub offset:Vec3,
 }
 
 #[derive(Component, Default, Clone, Debug)]
 pub struct WolfEntity {
-    pub image: String,
-    pub atlas_width:u8,
-    pub atlas_height:u8,
     pub classes: HashMap<String, ()>,
     pub properties_float: HashMap<String, f32>,
     pub properties_int: HashMap<String, i32>,
@@ -43,6 +42,18 @@ pub struct WolfEntity {
 impl WolfEntity {
     pub fn has_class(&self, class: &str) -> bool {
         self.classes.contains_key(class)
+    }
+
+    pub fn get_property_f32(&self, property:&str) -> Option<&f32> {
+        self.properties_float.get(property)
+    }
+
+    pub fn get_property_int(&self, property:&str) -> Option<&i32> {
+        self.properties_int.get(property)
+    }
+
+    pub fn get_property_string(&self, property:&str) -> Option<&String> {
+        self.properties_string.get(property)
     }
 }
 
