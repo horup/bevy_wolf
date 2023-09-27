@@ -143,8 +143,6 @@ pub fn spawn_system(
             let tiles = world.map.get(right);
             for tile in tiles {
                 if tile.has_class("block") {
-                    dbg!(&tile.index);
-                    dbg!(&tile.classes);
                     transform.look_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z)
                 }
             }
