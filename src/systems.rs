@@ -75,8 +75,7 @@ pub fn spawn_system(
         if we.has_class("camera") {
             entity
                 .insert(Camera3dBundle {
-                    transform: Transform::from_xyz(we.pos.x, we.pos.y, 0.5)
-                        .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
+                    transform: Transform::default().looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z),
                     ..Default::default()
                 })
                 .insert(WolfCamera::default());
@@ -106,17 +105,14 @@ pub fn spawn_system(
                         request_redraw: true,
                         ..Default::default()
                     })
-                    .insert(
-                        Transform::from_xyz(we.pos.x as f32, we.pos.y as f32, 0.0)
-                            .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
-                    );
+                    .insert(Transform::default().looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z));
             }
         }
 
         if we.has_class("sprite") {
-            let fx = |p| *we.get_property_f32(p).unwrap_or(&0.0);
+           /* let fx = |p| *we.get_property_f32(p).unwrap_or(&0.0);
             let fy = |p| *we.get_property_f32(p).unwrap_or(&0.5);
-            let offset = Vec3::new(fx("offset_x"), fx("offset_y"), fy("offset_z"));
+            let offset = Vec3::new(fx("offset_x"), fx("offset_y"), fy("offset_z"));*/
             let atlas_width = *we.get_property_int("atlas_width").unwrap_or(&1) as u8;
             let atlas_height = *we.get_property_int("atlas_height").unwrap_or(&1) as u8;
             let atlas = assets
@@ -138,7 +134,6 @@ pub fn spawn_system(
                     ..Default::default()
                 })
                 .insert(WolfSprite {
-                    offset,
                     atlas_height,
                     atlas_width,
                     ..Default::default()
@@ -146,8 +141,15 @@ pub fn spawn_system(
         }
 
         if we.has_class("door") {
-            let mut transform = Transform::from_xyz(we.pos.x, we.pos.y, 0.5)
+            let mut transform = Transform::default()
                 .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z);
+            let right = we.origin.as_uvec3().truncate() + UVec2::new(1, 0);
+            let tiles = world.map.get(right);
+            for tile in tiles {
+                if tile.has_class("block") {
+                    transform.look_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z)
+                }
+            }
             entity.insert(PbrBundle {
                 mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
                 material: materials.add(StandardMaterial {
@@ -164,7 +166,9 @@ pub fn spawn_system(
             });
         }
 
-        if we.has_class("body") {}
+        if we.has_class("body") {
+
+        }
     }
 }
 
@@ -185,7 +189,8 @@ pub fn sprite_system(
                         .get(sprite.atlas_height, sprite.atlas_width, &mut meshes);
                 let handle = atlas.index(sprite.index as u16);
                 *mesh_handle = handle;
-                transform.translation = Vec3::new(we.pos.x, we.pos.y, we.pos.z) + sprite.offset;
+                transform.translation =
+                    Vec3::new(we.origin.x, we.origin.y, we.origin.z);
                 let z = transform.translation.z;
                 transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
             }
@@ -302,7 +307,7 @@ pub fn camera_system(
         let speed = 10.0;
         transform.translation += forward * v.y * dt * speed;
         transform.translation += side * v.x * dt * speed;
-        we.pos = transform.translation;
+        we.origin = transform.translation;
         break;
     }
 }
@@ -453,7 +458,7 @@ pub fn debug_gizmos_system(
     if config.show_dev {
         for s in sprites.iter() {
             gizmos.ray(
-                s.pos,
+                s.origin,
                 Vec3::new(s.facing.cos(), s.facing.sin(), 0.0),
                 Color::RED,
             );
@@ -468,15 +473,15 @@ pub fn spatial_hash_system(
 ) {
     world.grid.clear();
     for (e, we) in entities.iter() {
-        world.grid.insert(e, we.pos);
+        world.grid.insert(e, we.origin);
     }
 
     let c = world.grid.query_around(Vec3::default(), 5.0).count();
 }
 
-pub fn transform_system(mut entities:Query<(&WolfEntity, &mut Transform)>) {
+pub fn transform_system(mut entities: Query<(&WolfEntity, &mut Transform)>) {
     for (e, mut t) in entities.iter_mut() {
-        t.translation = e.pos;
+        t.translation = e.origin;
     }
 }
 
@@ -487,10 +492,10 @@ pub fn build_systems(app: &mut App) {
         Update,
         (
             spawn_system,
+            transform_system,
             camera_system,
             sprite_system,
             ui_system,
-            transform_system,
             spatial_hash_system,
             instance_manager_spawn_system,
             instance_manage_render_system,
