@@ -16,6 +16,7 @@ use bevy::{
     },
     utils::{petgraph::dot::Config, HashMap},
 };
+use bevy_rapier3d::prelude::{RigidBody, Collider, Restitution};
 
 pub fn startup_system(
     mut commands: Commands,
@@ -170,6 +171,11 @@ pub fn spawn_system(
                 transform,
                 ..Default::default()
             });
+        }
+
+        if we.has_class("body") {
+           dbg!("ha");
+            //.insert(Restitution::coefficient(0.7));
         }
     }
 }

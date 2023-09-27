@@ -41,7 +41,7 @@
  </tileset>
  <tileset firstgid="9" name="entities" tilewidth="64" tileheight="64" tilecount="8" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
-  <tile id="2" type="camera light">
+  <tile id="2" type="camera light body">
    <image width="64" height="64" source="../images/info_player_start.png"/>
   </tile>
   <tile id="3" type="door">
@@ -81,7 +81,7 @@
    </properties>
    <image width="64" height="64" source="../images/deco_lamp_loft.png"/>
   </tile>
-  <tile id="9" type="sprite">
+  <tile id="9" type="sprite body">
    <properties>
     <property name="atlas_height" type="int" value="8"/>
     <property name="atlas_width" type="int" value="8"/>
