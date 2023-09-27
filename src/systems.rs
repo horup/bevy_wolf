@@ -168,8 +168,6 @@ pub fn spawn_system(
         if we.has_class("body") {
 
         }
-
-
     }
 }
 
