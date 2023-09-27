@@ -28,9 +28,6 @@ pub fn startup_system(
     assets
         .meshes
         .insert("floor", ass.load("meshes/floor.gltf#Mesh0/Primitive0"));
-    assets
-        .meshes
-        .insert("sprite", ass.load("meshes/sprite.gltf#Mesh0/Primitive0"));
 
     commands
         .spawn(TextBundle {
@@ -68,8 +65,6 @@ pub fn spawn_system(
     mut assets: ResMut<WolfAssets>,
 ) {
     let block_mesh: Handle<Mesh> = ass.load("meshes/block.gltf#Mesh0/Primitive0");
-    let sprite_mesh: Handle<Mesh> = ass.load("meshes/sprite.gltf#Mesh0/Primitive0");
-    //let existing_materials = materials.iter().map(|x|x.clone()).collect();
     let mut existing_materials = HashMap::new();
     for (id, material) in materials.iter() {
         existing_materials.insert(material.base_color_texture.clone(), id.clone());
@@ -119,6 +114,9 @@ pub fn spawn_system(
         }
 
         if we.has_class("sprite") {
+            let fx = |p| *we.get_property_f32(p).unwrap_or(&0.0);
+            let fy = |p| *we.get_property_f32(p).unwrap_or(&0.5);
+            let offset = Vec3::new(fx("offset_x"), fx("offset_y"), fy("offset_z"));
             let atlas_width = *we.get_property_int("atlas_width").unwrap_or(&1) as u8;
             let atlas_height = *we.get_property_int("atlas_height").unwrap_or(&1) as u8;
             let atlas = assets
@@ -141,7 +139,7 @@ pub fn spawn_system(
                     ..Default::default()
                 })
                 .insert(WolfSprite {
-                    offset: Vec3::new(0.0, 0.0, 0.5),
+                    offset,
                     atlas_height,
                     atlas_width,
                     ..Default::default()
@@ -149,17 +147,17 @@ pub fn spawn_system(
         }
 
         if we.has_class("door") {
-            let mut transform = Transform::from_xyz(we.pos.x, we.pos.y, 0.0)
-                .looking_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z);
+            let mut transform = Transform::from_xyz(we.pos.x, we.pos.y, 0.5)
+                .looking_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z);
             let right = we.index + UVec2::new(1, 0);
             let tiles = world.map.get(right);
             for tile in tiles {
                 if tile.has_class("block") {
-                    transform.look_to(Vec3::new(1.0, 0.0, 0.0), Vec3::Z)
+                    transform.look_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z)
                 }
             }
             entity.insert(PbrBundle {
-                mesh: sprite_mesh.clone(),
+                mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
                 material: materials.add(StandardMaterial {
                     alpha_mode: AlphaMode::Blend,
                     perceptual_roughness: 1.0,
