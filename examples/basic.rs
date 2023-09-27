@@ -38,8 +38,6 @@ fn test_system(mut q:Query<&mut WolfEntity, With<WolfSprite>>, time:Res<Time>, m
         let iter = world.grid.query_around(s.origin, 0.1);
         hits += iter.count();
     }
-
-    dbg!(hits);
 }
 
 fn input_system(keys:Res<Input<KeyCode>>, mut windows:Query<&mut Window>) {

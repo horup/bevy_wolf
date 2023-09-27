@@ -4,7 +4,7 @@ use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfInstance, WolfInstanceManager, WolfSprite,
-    WolfThing, WolfWorld,
+    WolfWorld,
 };
 
 use bevy::{

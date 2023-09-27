@@ -16,11 +16,6 @@ pub struct WolfCamera {
 }
 
 #[derive(Component, Default, Clone)]
-pub struct WolfThing {
-    pub pos:Vec3,
-}
-
-#[derive(Component, Default, Clone)]
 pub struct WolfSprite {
     pub index:f32,
     pub atlas_width:u8,
