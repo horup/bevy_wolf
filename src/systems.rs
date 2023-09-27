@@ -257,13 +257,13 @@ fn load_map_system(
 }
 
 pub fn camera_system(
-    mut cameras: Query<(&mut WolfCamera, &mut Transform)>,
+    mut cameras: Query<(&mut WolfCamera, &mut Transform, &mut WolfEntity)>,
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     config: Res<WolfConfig>,
     mut mouse_motion: EventReader<MouseMotion>,
 ) {
-    for (wcamera, mut transform) in cameras.iter_mut() {
+    for (wcamera, mut transform, mut we) in cameras.iter_mut() {
         let mut v = Vec3::new(0.0, 0.0, 0.0);
         let up = Vec3::new(0.0, 0.0, 1.0);
 
@@ -302,6 +302,7 @@ pub fn camera_system(
         let speed = 10.0;
         transform.translation += forward * v.y * dt * speed;
         transform.translation += side * v.x * dt * speed;
+        we.pos = transform.translation;
         break;
     }
 }
@@ -473,6 +474,12 @@ pub fn spatial_hash_system(
     let c = world.grid.query_around(Vec3::default(), 5.0).count();
 }
 
+pub fn transform_system(mut entities:Query<(&WolfEntity, &mut Transform)>) {
+    for (e, mut t) in entities.iter_mut() {
+        t.translation = e.pos;
+    }
+}
+
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
     app.add_systems(PreUpdate, (load_map_system).chain());
@@ -483,6 +490,7 @@ pub fn build_systems(app: &mut App) {
             camera_system,
             sprite_system,
             ui_system,
+            transform_system,
             spatial_hash_system,
             instance_manager_spawn_system,
             instance_manage_render_system,
