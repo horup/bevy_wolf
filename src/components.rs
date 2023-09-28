@@ -1,3 +1,4 @@
+use std::ops::{Deref, DerefMut};
 use bevy::{prelude::*, utils::HashMap, asset::Asset};
 
 #[derive(Component, Clone)]
@@ -8,6 +9,40 @@ pub struct Spawn<T : Clone> {
 impl<T : Clone> Spawn<T> {
     pub fn new(t:T) -> Self {
         Self { variant: t }
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct Prev<T:Component + Clone> {
+    pub component:T
+}
+
+impl<T:Component + Clone> Deref for Prev<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.component
+    }
+}
+
+impl<T:Component + Clone> DerefMut for Prev<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.component
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct WolfBody {
+    pub height:f32,
+    pub radius:f32
+}
+
+impl Default for WolfBody {
+    fn default() -> Self {
+        Self { 
+            height:1.0,
+            radius:0.4
+        }
     }
 }
 

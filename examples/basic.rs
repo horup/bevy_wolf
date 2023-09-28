@@ -32,9 +32,6 @@ fn test_system(mut q:Query<&mut Transform, With<WolfSprite>>, time:Res<Time>, mu
     }
     let mut hits = 0;
     for mut s in q.iter_mut() {
-        //s.index += time.delta_seconds();
-        //s.pos.x += time.delta_seconds();
-        //s.facing += time.delta_seconds();
         let iter = world.grid.query_around(s.translation, 0.1);
         hits += iter.count();
     }

@@ -3,8 +3,8 @@ use std::f32::consts::PI;
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance, WolfInstanceManager,
-    WolfSprite, WolfWorld,
+    AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
+    WolfInstanceManager, WolfSprite, WolfWorld,
 };
 
 use bevy::{
@@ -77,6 +77,9 @@ pub fn spawn_system(
             transform,
             ..Default::default()
         });
+        entity.insert(Prev {
+            component: transform,
+        });
 
         let image = we.get_property_string("image");
         if we.has_class("camera") {
@@ -114,6 +117,11 @@ pub fn spawn_system(
                     })
                     .insert(transform);
             }
+
+            entity.insert(WolfBody {
+                height: 1.0,
+                radius: 0.5,
+            });
         }
 
         if we.has_class("sprite") {
@@ -171,7 +179,9 @@ pub fn spawn_system(
             });
         }
 
-        if we.has_class("body") {}
+        if we.has_class("body") {
+            entity.insert(WolfBody::default());
+        }
     }
 }
 /*
@@ -518,6 +528,79 @@ pub fn spatial_hash_system(
     let c = world.grid.query_around(Vec3::default(), 5.0).count();
 }
 
+pub fn update_prev_system(mut transforms: Query<(&Transform, &mut Prev<Transform>)>) {
+    for (current, mut prev) in transforms.iter_mut() {
+        prev.component = *current;
+    }
+}
+
+pub fn body_system(
+    bodies: Query<(Entity, &WolfBody)>,
+    mut transforms: Query<&mut Transform>,
+    mut prev_transforms: Query<&mut Prev<Transform>>,
+    mut world: ResMut<WolfWorld>,
+) {
+    for (entity, body) in bodies.iter() {
+        let Ok(transform) = transforms.get(entity) else {
+            continue;
+        };
+        let Ok(prev_transform) = prev_transforms.get(entity) else {
+            continue;
+        };
+        let v = transform.translation - prev_transform.translation;
+        let mut vl = v.length();
+        if vl == 0.0 {
+            continue;
+        }
+
+        let d = v.normalize_or_zero();
+        let max_step = 0.01;
+        let mut new_translation = prev_transform.component.translation.clone();
+
+        while vl > 0.0 {
+            let step = vl.min(max_step);
+            vl -= step;
+            new_translation += d * step;
+        }
+
+        let Ok(mut transform) = transforms.get_mut(entity) else {
+            continue;
+        };
+
+        transform.translation = new_translation;
+
+        /* let r = v.length() + 2.0;
+        for other_e in world
+            .grid
+            .query_around(prev_transform.translation, r)
+            .skip_while(|x| x == &entity)
+        {
+            let Ok(other_transform) = transforms.get(other_e) else {
+                continue;
+            };
+            let Ok(other_body) = bodies.get(other_e) else {
+                continue;
+            };
+
+            
+        }
+        let Ok(mut transform) = transforms.get_mut(entity) else {
+            continue;
+        };
+        transform.translation = prev_transform.translation + v;*/
+    }
+    /* for (entity, mut current_transform, prev_transform, wb) in bodies.iter_mut() {
+        let v = current_transform.translation - prev_transform.translation;
+        current_transform.translation = prev_transform.component.translation + v;
+        let query_r = 2.0;
+        for e in world.grid.query_around(current_transform.translation, query_r) {
+            if entity != e {
+                let t = bodies.get(e);
+            }
+        }
+    }*/
+}
+
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
     app.add_systems(PreUpdate, (load_map_system).chain());
@@ -525,7 +608,10 @@ pub fn build_systems(app: &mut App) {
         Update,
         (
             spawn_system,
+            update_prev_system,
+            spatial_hash_system,
             camera_system,
+            body_system,
             sprite_system,
             ui_system,
             spatial_hash_system,
