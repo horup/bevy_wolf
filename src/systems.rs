@@ -560,10 +560,16 @@ pub fn body_system(
         while vl > 0.0 {
             let step = vl.min(max_step);
             vl -= step;
-            new_translation += d * step;
+
+            let axes = [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0)];
+            for axis in axes {
+                let new_pos = new_translation + d * axis * step;
+                new_translation = new_pos;
+            }
+            
+            //new_translation += d * step;
             i+=1;
         }
-        dbg!(i);
 
         let Ok(mut transform) = transforms.get_mut(entity) else {
             continue;
