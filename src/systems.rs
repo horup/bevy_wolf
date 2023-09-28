@@ -4,7 +4,7 @@ use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
-    WolfInstanceManager, WolfSprite, WolfWorld,
+    WolfInstanceManager, WolfSprite, WolfWorld, WolfBodyShape,
 };
 
 use bevy::{
@@ -121,6 +121,7 @@ pub fn spawn_system(
             entity.insert(WolfBody {
                 height: 1.0,
                 radius: 0.5,
+                shape:WolfBodyShape::Cuboid
             });
         }
 
@@ -540,6 +541,7 @@ pub fn body_system(
     mut prev_transforms: Query<&mut Prev<Transform>>,
     mut world: ResMut<WolfWorld>,
 ) {
+    let max_r = 0.5;
     for (entity, body) in bodies.iter() {
         let Ok(transform) = transforms.get(entity) else {
             continue;
@@ -554,21 +556,51 @@ pub fn body_system(
         }
 
         let d = v.normalize_or_zero();
-        let max_step = 0.015;
+        let max_step = 0.1;
         let mut new_translation = prev_transform.component.translation.clone();
-        let mut i = 0;
         while vl > 0.0 {
             let step = vl.min(max_step);
             vl -= step;
 
             let axes = [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0)];
             for axis in axes {
-                let new_pos = new_translation + d * axis * step;
+                let d = d * axis;
+                let old_pos = new_translation;
+                let mut new_pos = old_pos + d * step;
+                let q_radius = step + max_r * 2.0;
+                for (other_e, other_pos) in world.grid.query_around(new_pos, q_radius) {
+                    if entity == other_e {
+                        continue;
+                    }
+                    let v = (other_pos - old_pos).normalize_or_zero();
+                    if d.dot(v) <= 0.0 {
+                        continue;
+                    }
+                    let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
+
+                    // let a = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
+                    let a = parry2d::shape::Ball::new(body.radius);
+                    let b = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
+                    fn aabb(pos:Vec3, body:&WolfBody) -> parry2d::bounding_volume::Aabb {
+                        let pos = &[pos.x, pos.y].into();
+                        match body.shape {
+                            WolfBodyShape::Ball => {
+                                parry2d::shape::Ball::new(body.radius).aabb(pos)
+                            },
+                            WolfBodyShape::Cuboid => {
+                                parry2d::shape::Cuboid::new([body.radius, body.radius].into()).aabb(pos)
+                            }
+                        }
+                    }
+                    let a = aabb(new_pos, &body);
+                    let b = aabb(other_pos, &other_body);
+                    if a.intersection(&b).is_some() {
+                        new_pos = old_pos;
+                        break;
+                    }
+                }
                 new_translation = new_pos;
             }
-            
-            //new_translation += d * step;
-            i+=1;
         }
 
         let Ok(mut transform) = transforms.get_mut(entity) else {
@@ -576,6 +608,12 @@ pub fn body_system(
         };
 
         transform.translation = new_translation;
+
+        let Ok(mut prev_transform) = prev_transforms.get_mut(entity) else {
+            continue;
+        };
+
+        prev_transform.translation = new_translation;
 
         /* let r = v.length() + 2.0;
         for other_e in world
@@ -590,7 +628,7 @@ pub fn body_system(
                 continue;
             };
 
-            
+
         }
         let Ok(mut transform) = transforms.get_mut(entity) else {
             continue;

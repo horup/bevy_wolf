@@ -32,16 +32,24 @@ impl<T:Component + Clone> DerefMut for Prev<T> {
 }
 
 #[derive(Component, Clone)]
+pub enum WolfBodyShape {
+    Cuboid,
+    Ball
+}
+
+#[derive(Component, Clone)]
 pub struct WolfBody {
     pub height:f32,
-    pub radius:f32
+    pub radius:f32,
+    pub shape:WolfBodyShape
 }
 
 impl Default for WolfBody {
     fn default() -> Self {
         Self { 
             height:1.0,
-            radius:0.4
+            radius:0.4,
+            shape:WolfBodyShape::Cuboid
         }
     }
 }
