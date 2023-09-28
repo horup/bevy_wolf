@@ -21,7 +21,7 @@ fn main() {
             ..Default::default()
         }).set(RenderPlugin {
             wgpu_settings:WgpuSettings {
-                backends:Some(Backends::VULKAN), // not sure why needed, selects dx12 backend sometimes
+                backends:Some(Backends::VULKAN), // not sure why needed to force to vulkan
                 ..Default::default()
             },
             ..Default::default()
