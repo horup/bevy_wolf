@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use bevy::{prelude::*, render::texture::ImageSampler, window::{PresentMode, Cursor, CursorGrabMode}};
+use bevy::{prelude::*, render::{texture::ImageSampler, settings::{WgpuSettings, Backends}, RenderPlugin}, window::{PresentMode, Cursor, CursorGrabMode}};
 use bevy_wolf::*;
 
 fn main() {
@@ -18,6 +18,12 @@ fn main() {
                 },
                 ..Default::default()
             }),
+            ..Default::default()
+        }).set(RenderPlugin {
+            wgpu_settings:WgpuSettings {
+                backends:Some(Backends::VULKAN), // not sure why needed, selects dx12 backend sometimes
+                ..Default::default()
+            },
             ..Default::default()
         }))
         .add_plugins(WolfPlugin)

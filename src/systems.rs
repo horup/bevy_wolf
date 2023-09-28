@@ -579,7 +579,7 @@ pub fn body_system(
                     let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
 
                     // let a = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
-                    let a = parry2d::shape::Ball::new(body.radius);
+                    /*let a = parry2d::shape::Ball::new(body.radius);
                     let b = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
                     fn aabb(pos:Vec3, body:&WolfBody) -> parry2d::bounding_volume::Aabb {
                         let pos = &[pos.x, pos.y].into();
@@ -597,7 +597,7 @@ pub fn body_system(
                     if a.intersection(&b).is_some() {
                         new_pos = old_pos;
                         break;
-                    }
+                    }*/
                 }
                 new_translation = new_pos;
             }
