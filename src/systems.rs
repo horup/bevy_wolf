@@ -3,8 +3,8 @@ use std::f32::consts::PI;
 use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
-    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfInstance, WolfInstanceManager, WolfSprite,
-    WolfWorld,
+    AssetMap, WolfAssets, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance, WolfInstanceManager,
+    WolfSprite, WolfWorld,
 };
 
 use bevy::{
@@ -122,27 +122,28 @@ pub fn spawn_system(
             let atlas = assets
                 .sprite_meshes
                 .get(atlas_height, atlas_width, &mut meshes);
+            entity.insert(WolfSprite {
+                atlas_height,
+                atlas_width,
+                ..Default::default()
+            });
+            let id = entity.id();
             entity
-                .insert(WolfSprite {
-                    atlas_height,
-                    atlas_width,
+                .commands()
+                .spawn(PbrBundle {
+                    mesh: atlas.index(0),
+                    material: materials.add(StandardMaterial {
+                        alpha_mode: AlphaMode::Blend,
+                        perceptual_roughness: 1.0,
+                        metallic: 0.0,
+                        cull_mode: None,
+                        base_color_texture: image.and_then(|x| Some(ass.load(x))),
+                        unlit: true,
+                        ..Default::default()
+                    }),
                     ..Default::default()
                 })
-                .with_children(|builder| {
-                    builder.spawn(PbrBundle {
-                        mesh: atlas.index(0),
-                        material: materials.add(StandardMaterial {
-                            alpha_mode: AlphaMode::Blend,
-                            perceptual_roughness: 1.0,
-                            metallic: 0.0,
-                            cull_mode: None,
-                            base_color_texture: image.and_then(|x| Some(ass.load(x))),
-                            unlit: true,
-                            ..Default::default()
-                        }),
-                        ..Default::default()
-                    });
-                });
+                .insert(WolfEntityRef { entity: id });
         }
 
         if we.has_class("door") {
@@ -153,6 +154,7 @@ pub fn spawn_system(
                     transform.look_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z)
                 }
             }
+
             entity.insert(PbrBundle {
                 mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
                 material: materials.add(StandardMaterial {
@@ -172,9 +174,10 @@ pub fn spawn_system(
         if we.has_class("body") {}
     }
 }
-
+/*
 pub fn sprite_system(
-    mut sprites: Query<(Entity, &WolfSprite, &mut Handle<Mesh>, &WolfEntity)>,
+    mut sprites: Query<(Entity, &WolfSprite, &WolfEntity)>,
+    mut meshes: Query<()>,
     mut transforms: Query<&mut Transform>,
     cameras: Query<Entity, With<Camera3d>>,
     mut assets: ResMut<WolfAssets>,
@@ -193,6 +196,44 @@ pub fn sprite_system(
                 transform.translation = Vec3::new(we.start_pos.x, we.start_pos.y, we.start_pos.z);
                 let z = transform.translation.z;
                 transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
+            }
+        }
+    }
+}*/
+
+pub fn sprite_system(
+    mut commands: Commands,
+    mut sprite_meshes: Query<(Entity, &mut Handle<Mesh>, &WolfEntityRef)>,
+    mut transforms: Query<&mut Transform>,
+    sprites: Query<(Entity, &WolfSprite)>,
+    cameras: Query<Entity, With<Camera3d>>,
+    mut assets: ResMut<WolfAssets>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    for camera in cameras.iter() {
+        let camera_transform = transforms.get(camera).unwrap().clone();
+        for (e, mut mesh_handle, r) in sprite_meshes.iter_mut() {
+            match sprites.get(r.entity) {
+                Ok((sprite_entity, sprite)) => {
+                    let sprite_transform = *transforms
+                        .get(sprite_entity)
+                        .unwrap_or(&Transform::default());
+                    if let Ok(mut transform) = transforms.get_mut(e) {
+                        transform.translation = sprite_transform.translation;
+                        let atlas = assets.sprite_meshes.get(
+                            sprite.atlas_height,
+                            sprite.atlas_width,
+                            &mut meshes,
+                        );
+
+                        let handle = atlas.index(sprite.index as u16);
+                        *mesh_handle = handle;
+                        let z = transform.translation.z;
+                        transform
+                            .look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
+                    }
+                }
+                Err(_) => commands.entity(e).despawn(),
             }
         }
     }

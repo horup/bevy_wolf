@@ -22,6 +22,11 @@ pub struct WolfSprite {
     pub atlas_height:u8
 }
 
+#[derive(Component, Clone)]
+pub struct WolfEntityRef {
+    pub entity:Entity
+}
+
 #[derive(Component, Default, Clone, Debug)]
 pub struct WolfEntity {
     pub(crate) classes: Vec<String>,
