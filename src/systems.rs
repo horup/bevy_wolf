@@ -554,14 +554,16 @@ pub fn body_system(
         }
 
         let d = v.normalize_or_zero();
-        let max_step = 0.01;
+        let max_step = 0.015;
         let mut new_translation = prev_transform.component.translation.clone();
-
+        let mut i = 0;
         while vl > 0.0 {
             let step = vl.min(max_step);
             vl -= step;
             new_translation += d * step;
+            i+=1;
         }
+        dbg!(i);
 
         let Ok(mut transform) = transforms.get_mut(entity) else {
             continue;
