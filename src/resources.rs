@@ -8,7 +8,7 @@ use crate::WolfMap;
 
 
 pub struct WolfGrid {
-    spatial:flat_spatial::Grid<(Entity, Vec3), [f32;2]>, 
+    spatial:flat_spatial::Grid<(Entity, Vec2), [f32;2]>, 
 }
 
 impl Default for WolfGrid {
@@ -24,11 +24,11 @@ impl WolfGrid {
         let _ = self.spatial.clear();
     }
 
-    pub fn insert(&mut self, entity:Entity, pos:Vec3) {
+    pub fn insert(&mut self, entity:Entity, pos:Vec2) {
         self.spatial.insert([pos.x, pos.y], (entity, pos));
     }
 
-    pub fn query_around(&self, pos:Vec3, radius:f32) -> impl Iterator<Item = (Entity, Vec3)> + '_ {
+    pub fn query_around(&self, pos:Vec2, radius:f32) -> impl Iterator<Item = (Entity, Vec2)> + '_ {
         let iter = self.spatial.query_around([pos.x, pos.y], radius);
         let iter = iter.map(|x|*self.spatial.get(x.0).unwrap().1);
         iter

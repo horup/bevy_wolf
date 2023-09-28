@@ -518,15 +518,13 @@ pub fn debug_gizmos_system(
 
 pub fn spatial_hash_system(
     mut world: ResMut<WolfWorld>,
-    entities: Query<(Entity, &WolfEntity)>,
+    entities: Query<(Entity, &WolfEntity, &Transform)>,
     time: Res<Time>,
 ) {
     world.grid.clear();
-    for (e, we) in entities.iter() {
-        world.grid.insert(e, we.start_pos);
+    for (e, we, t) in entities.iter() {
+        world.grid.insert(e, t.translation.truncate());
     }
-
-    let c = world.grid.query_around(Vec3::default(), 5.0).count();
 }
 
 pub fn update_prev_system(mut transforms: Query<(&Transform, &mut Prev<Transform>)>) {
@@ -555,14 +553,38 @@ pub fn body_system(
             continue;
         }
 
-        let d = v.normalize_or_zero();
-        let max_step = 0.1;
+        let d = v.normalize_or_zero().truncate();
+        let max_step = 0.01;
         let mut new_translation = prev_transform.component.translation.clone();
         while vl > 0.0 {
             let step = vl.min(max_step);
             vl -= step;
+            let v = d * step;
+            let old_pos = new_translation.truncate();
+            let mut new_pos = old_pos + v;
 
-            let axes = [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0)];
+            // collision handling and response
+            let mut retry_count = 0;
+            let mut retry = true;
+            let q_radius = step + max_r * 2.0;
+            for (other_e, other_pos) in world.grid.query_around(new_pos, q_radius) {
+                if entity == other_e {
+                    continue;
+                }
+                let v = (other_pos - old_pos).normalize_or_zero();
+                if d.dot(v) <= 0.0 {
+                    continue;
+                }
+                let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
+            }
+            
+
+            
+            
+
+            new_translation.x = new_pos.x;
+            new_translation.y = new_pos.y;
+            /*let axes = [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0)];
             for axis in axes {
                 let d = d * axis;
                 let old_pos = new_translation;
@@ -600,7 +622,7 @@ pub fn body_system(
                     }*/
                 }
                 new_translation = new_pos;
-            }
+            }*/
         }
 
         let Ok(mut transform) = transforms.get_mut(entity) else {

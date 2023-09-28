@@ -37,10 +37,6 @@ fn test_system(mut q:Query<&mut Transform, With<WolfSprite>>, time:Res<Time>, mu
         config.show_dev = !config.show_dev;
     }
     let mut hits = 0;
-    for mut s in q.iter_mut() {
-        let iter = world.grid.query_around(s.translation, 0.1);
-        hits += iter.count();
-    }
 }
 
 fn input_system(keys:Res<Input<KeyCode>>, mut windows:Query<&mut Window>) {
