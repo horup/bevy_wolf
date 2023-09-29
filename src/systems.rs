@@ -5,7 +5,7 @@ use crate::{
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
     WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite, WolfWorld, BODY_SHAPE_BALL,
-    BODY_SHAPE_CUBOID,
+    BODY_SHAPE_CUBOID, WolfDoor,
 };
 
 use bevy::{
@@ -172,6 +172,10 @@ pub fn spawn_system(
                     ..Default::default()
                 }),
                 transform,
+                ..Default::default()
+            });
+
+            entity.insert(WolfDoor {
                 ..Default::default()
             });
         }
@@ -588,13 +592,18 @@ pub fn body_system(
                 try_count += 1;
                 retry = false;
                 for (other_e, other_pos) in world.grid.query_around(e, q_radius) {
+                    if body.ignore {
+                        continue;
+                    }
                     if entity == other_e {
                         continue;
                     }
-
                     let Ok((_, other_body)) = bodies.get(other_e) else {
                         continue;
                     };
+                    if other_body.ignore {
+                        continue;
+                    }
                     let a_cuboid = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
                     let a_ball = parry2d::shape::Ball::new(body.radius);
                     let b_cuboid =
@@ -658,9 +667,11 @@ pub fn body_system(
     }
 }
 
-fn door_system(mut commands:Commands, mut interact_events:EventReader<WolfInteractEvent>) {
+fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody)>) {
     for ev in interact_events.iter() {
-        commands.entity(ev.entity).despawn_recursive();
+        let Ok((door, mut body)) = doors.get_mut(ev.entity) else { continue; };
+        body.ignore = true;
+        dbg!(body.ignore);
     }
 }
 

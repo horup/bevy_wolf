@@ -38,7 +38,8 @@ pub const BODY_SHAPE_BALL:u8 = 1;
 pub struct WolfBody {
     pub height:f32,
     pub radius:f32,
-    pub shape:u8
+    pub shape:u8,
+    pub ignore:bool
 }
 
 impl Default for WolfBody {
@@ -46,7 +47,8 @@ impl Default for WolfBody {
         Self { 
             height:1.0,
             radius:0.5,
-            shape:BODY_SHAPE_CUBOID
+            shape:BODY_SHAPE_CUBOID,
+            ignore: false
         }
     }
 }
@@ -146,5 +148,10 @@ pub struct WolfUIFPSText;
 
 #[derive(Component, Default)]
 pub struct WolfInteract {
+    
+}
+
+#[derive(Component, Default)]
+pub struct WolfDoor {
     
 }
