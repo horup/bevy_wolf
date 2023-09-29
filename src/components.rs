@@ -153,5 +153,19 @@ pub struct WolfInteract {
 
 #[derive(Component, Default)]
 pub struct WolfDoor {
-    
+    pub pos:Vec3,
+    pub is_open:bool,
+    pub is_opening:bool,
+    pub timer:f32,
+}
+
+impl WolfDoor {
+    pub fn open(&mut self) {
+        if !self.is_open && !self.is_opening {
+            self.is_opening = true;
+            if self.timer == 0.0 {
+                self.timer = 1.0;
+            }
+        }
+    }
 }

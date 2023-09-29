@@ -667,11 +667,25 @@ pub fn body_system(
     }
 }
 
-fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody)>) {
+fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody)>, time:Res<Time>) {
     for ev in interact_events.iter() {
-        let Ok((door, mut body)) = doors.get_mut(ev.entity) else { continue; };
-        body.disabled = true;
-        dbg!(body.disabled);
+        let Ok((mut door, mut body)) = doors.get_mut(ev.entity) else { continue; };
+        door.open();
+    }
+
+    for (mut door, mut body) in doors.iter_mut() {
+        if door.timer > 0.0 {
+            door.timer -= time.delta_seconds();
+        }
+        if door.timer <= 0.0 {
+            door.timer = 0.0;
+
+            if door.is_opening {
+                door.is_opening = false;
+                door.is_open = true;
+            }
+        }
+        body.disabled = door.is_open;
     }
 }
 
