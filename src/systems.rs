@@ -4,7 +4,7 @@ use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
-    WolfInstanceManager, WolfSprite, WolfWorld, WolfBodyShape,
+    WolfInstanceManager, WolfSprite, WolfWorld, BODY_SHAPE_CUBOID, BODY_SHAPE_BALL,
 };
 
 use bevy::{
@@ -117,12 +117,6 @@ pub fn spawn_system(
                     })
                     .insert(transform);
             }
-
-            entity.insert(WolfBody {
-                height: 1.0,
-                radius: 0.5,
-                shape:WolfBodyShape::Cuboid
-            });
         }
 
         if we.has_class("sprite") {
@@ -181,7 +175,16 @@ pub fn spawn_system(
         }
 
         if we.has_class("body") {
-            entity.insert(WolfBody::default());
+            let radius = we.properties_float.get("body_radius").unwrap_or(&0.5);
+            let height = we.properties_float.get("body_height").unwrap_or(&1.0);
+            let shape = we.properties_int.get("body_shape").unwrap_or(&0);
+            let body = WolfBody {
+                height:*height,
+                radius:*radius,
+                shape:*shape as u8,
+                ..Default::default()
+            };
+            entity.insert(body);
         }
     }
 }
@@ -577,7 +580,6 @@ pub fn body_system(
                     if entity == other_e {
                         continue;
                     }
-                   
                     
                     let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
                     let a_cuboid = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
@@ -587,13 +589,15 @@ pub fn body_system(
                     if let Ok(Some(c)) = parry2d::query::contact(
                         &[e.x, e.y].into(),
                         match body.shape {
-                            WolfBodyShape::Cuboid => &a_cuboid as &dyn parry2d::shape::Shape,
-                            WolfBodyShape::Ball => &a_ball as &dyn parry2d::shape::Shape,
+                            BODY_SHAPE_CUBOID => &a_cuboid as &dyn parry2d::shape::Shape,
+                            BODY_SHAPE_BALL => &a_ball as &dyn parry2d::shape::Shape,
+                            _=>&a_cuboid as &dyn parry2d::shape::Shape
                         },
                         &[other_pos.x, other_pos.y].into(),
                         match other_body.shape {
-                            WolfBodyShape::Cuboid => &a_cuboid as &dyn parry2d::shape::Shape,
-                            WolfBodyShape::Ball => &a_ball as &dyn parry2d::shape::Shape,
+                            BODY_SHAPE_CUBOID => &b_cuboid as &dyn parry2d::shape::Shape,
+                            BODY_SHAPE_BALL => &b_ball as &dyn parry2d::shape::Shape,
+                            _=>&a_cuboid as &dyn parry2d::shape::Shape
                         },
                         0.0,
                     ) {
