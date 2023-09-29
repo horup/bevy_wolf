@@ -523,7 +523,7 @@ pub fn spatial_hash_system(
 ) {
     world.grid.clear();
     for (e, we, t) in entities.iter() {
-        world.grid.insert(e, t.translation.truncate());
+        world.grid.insert_or_replace(e, t.translation.truncate());
     }
 }
 
@@ -539,6 +539,7 @@ pub fn body_system(
     mut prev_transforms: Query<&mut Prev<Transform>>,
     mut world: ResMut<WolfWorld>,
 ) {
+    let mut contacts = Vec::with_capacity(8);
     let max_r = 0.5;
     for (entity, body) in bodies.iter() {
         let Ok(transform) = transforms.get(entity) else {
@@ -566,7 +567,7 @@ pub fn body_system(
             let mut e = s + v;
 
             let q_radius = 4.0;
-            let mut contacts = Vec::new();
+            contacts.clear();
             let mut retry = true;
             let mut try_count = 0;
             while retry && try_count < 5 {
@@ -631,8 +632,10 @@ pub fn body_system(
         let Ok(mut prev_transform) = prev_transforms.get_mut(entity) else {
             continue;
         };
+        let new_translation = new_translation.extend(prev_translate.z);
+        prev_transform.translation = new_translation;
 
-        prev_transform.translation = new_translation.extend(prev_translate.z);
+        world.grid.insert_or_replace(entity, new_translation.truncate());
     }
 }
 

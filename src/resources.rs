@@ -9,12 +9,14 @@ use crate::WolfMap;
 
 pub struct WolfGrid {
     spatial:flat_spatial::Grid<(Entity, Vec2), [f32;2]>, 
+    map:HashMap<Entity, flat_spatial::grid::GridHandle>
 }
 
 impl Default for WolfGrid {
     fn default() -> Self {
         Self { 
-            spatial:flat_spatial::Grid::new(8)
+            spatial:flat_spatial::Grid::new(8),
+            map:HashMap::new()
         }
     }
 }
@@ -22,10 +24,16 @@ impl Default for WolfGrid {
 impl WolfGrid {
     pub fn clear(&mut self) {
         let _ = self.spatial.clear();
+        self.map.clear();
     }
 
-    pub fn insert(&mut self, entity:Entity, pos:Vec2) {
-        self.spatial.insert([pos.x, pos.y], (entity, pos));
+    pub fn insert_or_replace(&mut self, entity:Entity, pos:Vec2) {
+        if let Some(handle) = self.map.remove(&entity) {
+            self.spatial.remove_maintain(handle);
+        }
+
+        let h = self.spatial.insert([pos.x, pos.y], (entity, pos));
+        self.map.insert(entity, h);
     }
 
     pub fn query_around(&self, pos:Vec2, radius:f32) -> impl Iterator<Item = (Entity, Vec2)> + '_ {
