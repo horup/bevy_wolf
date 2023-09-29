@@ -39,7 +39,7 @@ pub struct WolfBody {
     pub height:f32,
     pub radius:f32,
     pub shape:u8,
-    pub ignore:bool
+    pub disabled:bool
 }
 
 impl Default for WolfBody {
@@ -48,7 +48,7 @@ impl Default for WolfBody {
             height:1.0,
             radius:0.5,
             shape:BODY_SHAPE_CUBOID,
-            ignore: false
+            disabled: false
         }
     }
 }

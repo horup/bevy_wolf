@@ -592,7 +592,7 @@ pub fn body_system(
                 try_count += 1;
                 retry = false;
                 for (other_e, other_pos) in world.grid.query_around(e, q_radius) {
-                    if body.ignore {
+                    if body.disabled {
                         continue;
                     }
                     if entity == other_e {
@@ -601,7 +601,7 @@ pub fn body_system(
                     let Ok((_, other_body)) = bodies.get(other_e) else {
                         continue;
                     };
-                    if other_body.ignore {
+                    if other_body.disabled {
                         continue;
                     }
                     let a_cuboid = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
@@ -670,8 +670,8 @@ pub fn body_system(
 fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody)>) {
     for ev in interact_events.iter() {
         let Ok((door, mut body)) = doors.get_mut(ev.entity) else { continue; };
-        body.ignore = true;
-        dbg!(body.ignore);
+        body.disabled = true;
+        dbg!(body.disabled);
     }
 }
 
