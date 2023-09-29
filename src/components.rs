@@ -142,3 +142,9 @@ pub struct WolfInstanceManager<M:Material + Asset> {
 
 #[derive(Component)]
 pub struct WolfUIFPSText;
+
+
+#[derive(Component, Default)]
+pub struct WolfInteract {
+    
+}

@@ -4,7 +4,8 @@ use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
-    WolfInstanceManager, WolfSprite, WolfWorld, BODY_SHAPE_BALL, BODY_SHAPE_CUBOID,
+    WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite, WolfWorld, BODY_SHAPE_BALL,
+    BODY_SHAPE_CUBOID,
 };
 
 use bevy::{
@@ -16,6 +17,7 @@ use bevy::{
     },
     utils::{petgraph::dot::Config, HashMap},
 };
+use parry2d::query::RayCast;
 
 pub fn startup_system(
     mut commands: Commands,
@@ -186,6 +188,12 @@ pub fn spawn_system(
             };
             entity.insert(body);
         }
+
+        if we.has_class("interact") {
+            entity.insert(WolfInteract {
+                ..Default::default()
+            });
+        }
     }
 }
 
@@ -291,13 +299,13 @@ fn load_map_system(
 }
 
 pub fn camera_system(
-    mut cameras: Query<(&mut WolfCamera, &mut Transform, &mut WolfEntity)>,
+    mut cameras: Query<(&mut Transform, &mut WolfEntity), With<WolfCamera>>,
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     config: Res<WolfConfig>,
     mut mouse_motion: EventReader<MouseMotion>,
 ) {
-    for (wcamera, mut transform, mut we) in cameras.iter_mut() {
+    for (mut transform, mut we) in cameras.iter_mut() {
         let mut v = Vec3::new(0.0, 0.0, 0.0);
         let up = Vec3::new(0.0, 0.0, 1.0);
 
@@ -341,17 +349,29 @@ pub fn camera_system(
     }
 }
 
-fn camera_interaction_system(
-    mut cameras: Query<(&mut WolfCamera, &mut Transform, &mut WolfEntity)>,
+fn interactor_system(
+    mut cameras: Query<(Entity, &mut Transform, &mut WolfEntity), With<WolfCamera>>,
+    interacts: Query<(&Transform, &WolfBody, &WolfInteract), Without<WolfCamera>>,
     keys: Res<Input<KeyCode>>,
-    time: Res<Time>,
     config: Res<WolfConfig>,
+    world: Res<WolfWorld>,
+    mut writer: EventWriter<WolfInteractEvent>,
 ) {
-    for (wcamera, mut transform, mut we) in cameras.iter_mut() {
+    for (camera_entity, transform, we) in cameras.iter_mut() {
         if keys.just_pressed(config.interaction_key) {
-            let v = transform.rotation * Vec3::new(1.0, 0.0, 0.0) * 0.25;
-            let p = transform.translation + v;
-            dbg!(p);
+            let v = transform.forward();//transform.rotation * Vec3::new(1.0, 0.0, 0.0);
+            let ray = parry2d::query::Ray::new(
+                [transform.translation.x, transform.translation.y].into(),
+                [v.x, v.y].into(),
+            );
+            let l = 1.0;
+            for (e, p) in world.grid.query_around(transform.translation.truncate(), 2.0) {
+                let Ok((_, wb, _wi)) = interacts.get(e) else { continue; };
+                let s = parry2d::shape::Cuboid::new([wb.radius, wb.radius].into());
+                if let Some(_) = s.cast_ray_and_get_normal(&[p.x, p.y].into(), &ray, l, true) {
+                    writer.send(WolfInteractEvent { interactor: camera_entity, entity: e });
+                }
+            }
         }
 
         break;
@@ -638,6 +658,12 @@ pub fn body_system(
     }
 }
 
+fn door_system(mut commands:Commands, mut interact_events:EventReader<WolfInteractEvent>) {
+    for ev in interact_events.iter() {
+        commands.entity(ev.entity).despawn_recursive();
+    }
+}
+
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
     app.add_systems(PreUpdate, (load_map_system).chain());
@@ -648,8 +674,9 @@ pub fn build_systems(app: &mut App) {
             update_prev_system,
             spatial_hash_system,
             camera_system,
-            camera_interaction_system,
             body_system,
+            interactor_system,
+            door_system, 
             sprite_system,
             ui_system,
             spatial_hash_system,

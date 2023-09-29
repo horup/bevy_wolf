@@ -11,6 +11,9 @@ mod systems;
 mod assets;
 pub use assets::*;
 
+mod events;
+pub use events::*;
+
 pub struct WolfPlugin;
 
 impl Plugin for WolfPlugin {
@@ -18,6 +21,7 @@ impl Plugin for WolfPlugin {
         systems::build_systems(app);
         assets::build_assets(app);
         resources::build_resources(app);
+        events::build_events(app);
     }
 }
 
