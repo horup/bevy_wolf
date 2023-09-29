@@ -553,37 +553,74 @@ pub fn body_system(
             continue;
         }
 
-        let d = v.normalize_or_zero().truncate();
-        let max_step = 0.01;
-        let mut new_translation = prev_transform.component.translation.clone();
+        let mut d = v.normalize_or_zero().truncate();
+        let max_step = 0.1;
+        let prev_translate = prev_transform.component.translation.clone();
+        let mut new_translation = prev_translate.truncate();
+       
         while vl > 0.0 {
             let step = vl.min(max_step);
             vl -= step;
-            let v = d * step;
-            let old_pos = new_translation.truncate();
-            let mut new_pos = old_pos + v;
+            let mut v = d * step;
+            let s = new_translation;
+            let mut e = s + v;
 
             // collision handling and response
             let mut retry_count = 0;
             let mut retry = true;
-            let q_radius = step + max_r * 2.0;
-            for (other_e, other_pos) in world.grid.query_around(new_pos, q_radius) {
-                if entity == other_e {
-                    continue;
+            let q_radius = 4.0;
+            let mut contacts = Vec::new();
+            let mut retry = true;
+            let mut try_count = 0;
+            while retry && try_count < 5 {
+                try_count += 1;
+                retry = false;
+                for (other_e, other_pos) in world.grid.query_around(e, q_radius) {
+                    if entity == other_e {
+                        continue;
+                    }
+                   
+                    
+                    let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
+                    let a = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
+                    let b = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
+
+                    if let Ok(Some(c)) = parry2d::query::contact(
+                        &[e.x, e.y].into(),
+                        &a,
+                        &[other_pos.x, other_pos.y].into(),
+                        &b,
+                        0.0,
+                    ) {
+                        contacts.push(c);
+                    }
                 }
-                let v = (other_pos - old_pos).normalize_or_zero();
-                if d.dot(v) <= 0.0 {
-                    continue;
+
+                if contacts.len() > 0 {
+                    let mut contact = contacts[0];
+                    let mut dist = contact.dist;
+                    for c in contacts.drain(..) {
+                        if c.dist < dist {
+                            dist = c.dist;
+                            contact = c;
+                        }
+                    }
+                    let n = Vec2::new(contact.normal1[0], contact.normal1[1]);
+                    let push_back = n * dist * 1.2;
+                    v += push_back;
+                    retry = true;
                 }
-                let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
+
+                new_translation += v;
+                e = new_translation;
+                v = Vec2::default();
+
             }
-            
 
-            
-            
+            dbg!(try_count);
 
-            new_translation.x = new_pos.x;
-            new_translation.y = new_pos.y;
+
+              
             /*let axes = [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0)];
             for axis in axes {
                 let d = d * axis;
@@ -629,44 +666,14 @@ pub fn body_system(
             continue;
         };
 
-        transform.translation = new_translation;
+        transform.translation = new_translation.extend(prev_translate.z);
 
         let Ok(mut prev_transform) = prev_transforms.get_mut(entity) else {
             continue;
         };
 
-        prev_transform.translation = new_translation;
-
-        /* let r = v.length() + 2.0;
-        for other_e in world
-            .grid
-            .query_around(prev_transform.translation, r)
-            .skip_while(|x| x == &entity)
-        {
-            let Ok(other_transform) = transforms.get(other_e) else {
-                continue;
-            };
-            let Ok(other_body) = bodies.get(other_e) else {
-                continue;
-            };
-
-
-        }
-        let Ok(mut transform) = transforms.get_mut(entity) else {
-            continue;
-        };
-        transform.translation = prev_transform.translation + v;*/
+        prev_transform.translation = new_translation.extend(prev_translate.z);
     }
-    /* for (entity, mut current_transform, prev_transform, wb) in bodies.iter_mut() {
-        let v = current_transform.translation - prev_transform.translation;
-        current_transform.translation = prev_transform.component.translation + v;
-        let query_r = 2.0;
-        for e in world.grid.query_around(current_transform.translation, query_r) {
-            if entity != e {
-                let t = bodies.get(e);
-            }
-        }
-    }*/
 }
 
 pub fn build_systems(app: &mut App) {
