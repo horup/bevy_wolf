@@ -553,7 +553,7 @@ pub fn body_system(
             continue;
         }
 
-        let mut d = v.normalize_or_zero().truncate();
+        let d = v.normalize_or_zero().truncate();
         let max_step = 0.1;
         let prev_translate = prev_transform.component.translation.clone();
         let mut new_translation = prev_translate.truncate();
@@ -565,9 +565,6 @@ pub fn body_system(
             let s = new_translation;
             let mut e = s + v;
 
-            // collision handling and response
-            let mut retry_count = 0;
-            let mut retry = true;
             let q_radius = 4.0;
             let mut contacts = Vec::new();
             let mut retry = true;
@@ -582,14 +579,21 @@ pub fn body_system(
                    
                     
                     let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
-                    let a = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
-                    let b = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
-
+                    let a_cuboid = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
+                    let a_ball = parry2d::shape::Ball::new(body.radius);
+                    let b_cuboid = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
+                    let b_ball = parry2d::shape::Ball::new(other_body.radius);
                     if let Ok(Some(c)) = parry2d::query::contact(
                         &[e.x, e.y].into(),
-                        &a,
+                        match body.shape {
+                            WolfBodyShape::Cuboid => &a_cuboid as &dyn parry2d::shape::Shape,
+                            WolfBodyShape::Ball => &a_ball as &dyn parry2d::shape::Shape,
+                        },
                         &[other_pos.x, other_pos.y].into(),
-                        &b,
+                        match other_body.shape {
+                            WolfBodyShape::Cuboid => &a_cuboid as &dyn parry2d::shape::Shape,
+                            WolfBodyShape::Ball => &a_ball as &dyn parry2d::shape::Shape,
+                        },
                         0.0,
                     ) {
                         contacts.push(c);
@@ -616,50 +620,6 @@ pub fn body_system(
                 v = Vec2::default();
 
             }
-
-            dbg!(try_count);
-
-
-              
-            /*let axes = [Vec3::new(0.0, 1.0, 0.0), Vec3::new(1.0, 0.0, 0.0)];
-            for axis in axes {
-                let d = d * axis;
-                let old_pos = new_translation;
-                let mut new_pos = old_pos + d * step;
-                let q_radius = step + max_r * 2.0;
-                for (other_e, other_pos) in world.grid.query_around(new_pos, q_radius) {
-                    if entity == other_e {
-                        continue;
-                    }
-                    let v = (other_pos - old_pos).normalize_or_zero();
-                    if d.dot(v) <= 0.0 {
-                        continue;
-                    }
-                    let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
-
-                    // let a = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
-                    /*let a = parry2d::shape::Ball::new(body.radius);
-                    let b = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
-                    fn aabb(pos:Vec3, body:&WolfBody) -> parry2d::bounding_volume::Aabb {
-                        let pos = &[pos.x, pos.y].into();
-                        match body.shape {
-                            WolfBodyShape::Ball => {
-                                parry2d::shape::Ball::new(body.radius).aabb(pos)
-                            },
-                            WolfBodyShape::Cuboid => {
-                                parry2d::shape::Cuboid::new([body.radius, body.radius].into()).aabb(pos)
-                            }
-                        }
-                    }
-                    let a = aabb(new_pos, &body);
-                    let b = aabb(other_pos, &other_body);
-                    if a.intersection(&b).is_some() {
-                        new_pos = old_pos;
-                        break;
-                    }*/
-                }
-                new_translation = new_pos;
-            }*/
         }
 
         let Ok(mut transform) = transforms.get_mut(entity) else {

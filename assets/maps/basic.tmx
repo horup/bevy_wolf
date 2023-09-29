@@ -51,13 +51,13 @@
    </properties>
    <image width="64" height="64" source="../images/door_blue.png"/>
   </tile>
-  <tile id="4" type="sprite">
+  <tile id="4" type="sprite body">
    <properties>
     <property name="image" value="images/deco_barrel.png"/>
    </properties>
    <image width="64" height="64" source="../images/deco_barrel.png"/>
   </tile>
-  <tile id="5" type="sprite">
+  <tile id="5" type="sprite body">
    <properties>
     <property name="image" value="images/deco_plant.png"/>
    </properties>
@@ -69,7 +69,7 @@
    </properties>
    <image width="64" height="64" source="../images/item_treasure_cross.png"/>
   </tile>
-  <tile id="7" type="sprite light">
+  <tile id="7" type="sprite light body">
    <properties>
     <property name="image" value="images/deco_lamp_floor.png"/>
    </properties>
