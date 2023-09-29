@@ -188,32 +188,6 @@ pub fn spawn_system(
         }
     }
 }
-/*
-pub fn sprite_system(
-    mut sprites: Query<(Entity, &WolfSprite, &WolfEntity)>,
-    mut meshes: Query<()>,
-    mut transforms: Query<&mut Transform>,
-    cameras: Query<Entity, With<Camera3d>>,
-    mut assets: ResMut<WolfAssets>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
-    for camera in cameras.iter() {
-        let camera_transform = transforms.get(camera).unwrap().clone();
-        for (entity, sprite, mut mesh_handle, we) in sprites.iter_mut() {
-            if let Ok(mut transform) = transforms.get_mut(entity) {
-                let atlas =
-                    assets
-                        .sprite_meshes
-                        .get(sprite.atlas_height, sprite.atlas_width, &mut meshes);
-                let handle = atlas.index(sprite.index as u16);
-                *mesh_handle = handle;
-                transform.translation = Vec3::new(we.start_pos.x, we.start_pos.y, we.start_pos.z);
-                let z = transform.translation.z;
-                transform.look_at(camera_transform.translation.truncate().extend(z), Vec3::Z);
-            }
-        }
-    }
-}*/
 
 pub fn sprite_system(
     mut commands: Commands,

@@ -143,6 +143,7 @@ impl WolfSpriteMesh {
 
 #[derive(Resource)]
 pub struct WolfConfig {
+    pub interaction_key: KeyCode,
     pub forward_key: KeyCode,
     pub backward_key: KeyCode,
     pub strife_left_key: KeyCode,
@@ -154,6 +155,7 @@ pub struct WolfConfig {
 impl Default for WolfConfig {
     fn default() -> Self {
         Self {
+            interaction_key: KeyCode::Space,
             forward_key: KeyCode::W,
             backward_key: KeyCode::S,
             strife_left_key: KeyCode::A,
