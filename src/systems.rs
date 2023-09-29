@@ -4,7 +4,7 @@ use crate::{
     assets::WolfMap,
     components::{Spawn, WolfCamera, WolfUIFPSText},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
-    WolfInstanceManager, WolfSprite, WolfWorld, BODY_SHAPE_CUBOID, BODY_SHAPE_BALL,
+    WolfInstanceManager, WolfSprite, WolfWorld, BODY_SHAPE_BALL, BODY_SHAPE_CUBOID,
 };
 
 use bevy::{
@@ -179,9 +179,9 @@ pub fn spawn_system(
             let height = we.properties_float.get("body_height").unwrap_or(&1.0);
             let shape = we.properties_int.get("body_shape").unwrap_or(&0);
             let body = WolfBody {
-                height:*height,
-                radius:*radius,
-                shape:*shape as u8,
+                height: *height,
+                radius: *radius,
+                shape: *shape as u8,
                 ..Default::default()
             };
             entity.insert(body);
@@ -337,6 +337,23 @@ pub fn camera_system(
         transform.translation += forward * v.y * dt * speed;
         transform.translation += side * v.x * dt * speed;
         we.start_pos = transform.translation;
+        break;
+    }
+}
+
+fn camera_interaction_system(
+    mut cameras: Query<(&mut WolfCamera, &mut Transform, &mut WolfEntity)>,
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    config: Res<WolfConfig>,
+) {
+    for (wcamera, mut transform, mut we) in cameras.iter_mut() {
+        if keys.just_pressed(config.interaction_key) {
+            let v = transform.rotation * Vec3::new(1.0, 0.0, 0.0) * 0.25;
+            let p = transform.translation + v;
+            dbg!(p);
+        }
+
         break;
     }
 }
@@ -535,7 +552,7 @@ pub fn body_system(
         let max_step = 0.1;
         let prev_translate = prev_transform.component.translation.clone();
         let mut new_translation = prev_translate.truncate();
-       
+
         while vl > 0.0 {
             let step = vl.min(max_step);
             vl -= step;
@@ -554,24 +571,27 @@ pub fn body_system(
                     if entity == other_e {
                         continue;
                     }
-                    
-                    let Ok((_, other_body)) = bodies.get(other_e) else { continue; };
+
+                    let Ok((_, other_body)) = bodies.get(other_e) else {
+                        continue;
+                    };
                     let a_cuboid = parry2d::shape::Cuboid::new([body.radius, body.radius].into());
                     let a_ball = parry2d::shape::Ball::new(body.radius);
-                    let b_cuboid = parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
+                    let b_cuboid =
+                        parry2d::shape::Cuboid::new([other_body.radius, other_body.radius].into());
                     let b_ball = parry2d::shape::Ball::new(other_body.radius);
                     if let Ok(Some(c)) = parry2d::query::contact(
                         &[e.x, e.y].into(),
                         match body.shape {
                             BODY_SHAPE_CUBOID => &a_cuboid as &dyn parry2d::shape::Shape,
                             BODY_SHAPE_BALL => &a_ball as &dyn parry2d::shape::Shape,
-                            _=>&a_cuboid as &dyn parry2d::shape::Shape
+                            _ => &a_cuboid as &dyn parry2d::shape::Shape,
                         },
                         &[other_pos.x, other_pos.y].into(),
                         match other_body.shape {
                             BODY_SHAPE_CUBOID => &b_cuboid as &dyn parry2d::shape::Shape,
                             BODY_SHAPE_BALL => &b_ball as &dyn parry2d::shape::Shape,
-                            _=>&a_cuboid as &dyn parry2d::shape::Shape
+                            _ => &a_cuboid as &dyn parry2d::shape::Shape,
                         },
                         0.0,
                     ) {
@@ -597,7 +617,6 @@ pub fn body_system(
                 new_translation += v;
                 e = new_translation;
                 v = Vec2::default();
-
             }
         }
 
@@ -613,7 +632,9 @@ pub fn body_system(
         let new_translation = new_translation.extend(prev_translate.z);
         prev_transform.translation = new_translation;
 
-        world.grid.insert_or_replace(entity, new_translation.truncate());
+        world
+            .grid
+            .insert_or_replace(entity, new_translation.truncate());
     }
 }
 
@@ -627,6 +648,7 @@ pub fn build_systems(app: &mut App) {
             update_prev_system,
             spatial_hash_system,
             camera_system,
+            camera_interaction_system,
             body_system,
             sprite_system,
             ui_system,
