@@ -674,11 +674,12 @@ pub fn body_system(
     }
 }
 
-fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody, &Children)>, time:Res<Time>, mut transforms:Query<(&mut Transform)>) {
+fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(Entity, &mut WolfDoor, &Children)>, time:Res<Time>, mut transforms:Query<(&mut Transform)>, mut bodies:Query<&mut WolfBody>, world:Res<WolfWorld>) {
     let dt_secs = time.delta_seconds();
-    let door_timer = 0.75;
+    let door_timer = 0.5;
+    let auto_close_timer = 1.0;
     for ev in interact_events.iter() {
-        let Ok((mut door, mut body, _)) = doors.get_mut(ev.entity) else { continue; };
+        let Ok((_, mut door, _)) = doors.get_mut(ev.entity) else { continue; };
         match &mut door.state {
             DoorState::Closed => {
                 door.state = DoorState::Opening { opening: Timer::start(door_timer) };
@@ -695,30 +696,40 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
         }
     }
 
-    for (mut door, mut body, children) in doors.iter_mut() {
+    for (e, mut door, children) in doors.iter_mut() {
+        let Ok(t) = transforms.get(e) else { continue; };
+        let Ok(mut door_body) = bodies.get_mut(e) else { continue; };
+        let p = t.translation.clone();
         match &mut door.state {
             crate::DoorState::Closed => {
-                body.disabled = false;
+                door_body.disabled = false;
             },
             crate::DoorState::Closing { closing } => {
-                body.disabled = false;
+                door_body.disabled = false;
                 closing.tick(dt_secs);
                 if closing.is_done() {
                     door.state = DoorState::Closed;
                 }
             },
             crate::DoorState::Opening { opening } => {
-                body.disabled = false;
+                door_body.disabled = false;
                 opening.tick(dt_secs);
                 if opening.is_done() {
-                    door.state = DoorState::Open { auto_close_timer: Timer::start(1.0) };
+                    door.state = DoorState::Open { auto_close_timer: Timer::start(auto_close_timer) };
                 }
             },
             crate::DoorState::Open { auto_close_timer } => {
-                body.disabled = true;
+                door_body.disabled = true;
+                for (other_e, other_p) in world.grid.query(p.truncate(), 1.0) {
+                    if other_e != e {
+                        if let Ok(other_body) = bodies.get(other_e) {
+                            
+                        }
+                    }
+                }
                 auto_close_timer.tick(dt_secs);
                 if auto_close_timer.is_done() {
-                    door.state = DoorState::Closing { closing: Timer::start(0.5) };
+                    door.state = DoorState::Closing { closing: Timer::start(door_timer) };
                 }
             },
         }
@@ -734,7 +745,7 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
                     crate::DoorState::Opening { opening } => {
                         transform.translation.x = opening.alpha()
                     },
-                    crate::DoorState::Open { auto_close_timer } => {
+                    crate::DoorState::Open { auto_close_timer:_} => {
                         transform.translation.x = 1.0;
                     }
                 }

@@ -36,6 +36,12 @@ impl WolfGrid {
         self.map.insert(entity, h);
     }
 
+    pub fn query(&self, pos:Vec2, half_extent:f32) -> impl Iterator<Item = (Entity, Vec2)> + '_ {
+        let iter = self.spatial.query([pos.x - half_extent, pos.y - half_extent], [pos.x + half_extent, pos.y + half_extent]);
+        let iter = iter.map(|x|*self.spatial.get(x.0).unwrap().1);
+        iter
+    }
+
     pub fn query_around(&self, pos:Vec2, radius:f32) -> impl Iterator<Item = (Entity, Vec2)> + '_ {
         let iter = self.spatial.query_around([pos.x, pos.y], radius);
         let iter = iter.map(|x|*self.spatial.get(x.0).unwrap().1);
