@@ -17,7 +17,7 @@ use bevy::{
     },
     utils::{petgraph::dot::Config, HashMap},
 };
-use parry2d::query::RayCast;
+use parry2d::{query::RayCast, bounding_volume::BoundingVolume};
 
 pub fn startup_system(
     mut commands: Commands,
@@ -677,21 +677,18 @@ pub fn body_system(
 fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(Entity, &mut WolfDoor, &Children)>, time:Res<Time>, mut transforms:Query<(&mut Transform)>, mut bodies:Query<&mut WolfBody>, world:Res<WolfWorld>) {
     let dt_secs = time.delta_seconds();
     let door_timer = 0.5;
-    let auto_close_timer = 1.0;
+    let auto_close_timer = 3.0;
     for ev in interact_events.iter() {
         let Ok((_, mut door, _)) = doors.get_mut(ev.entity) else { continue; };
         match &mut door.state {
             DoorState::Closed => {
                 door.state = DoorState::Opening { opening: Timer::start(door_timer) };
             },
-            DoorState::Closing { closing } => {
-                
+            DoorState::Closing { closing:_ } => {
             },
-            DoorState::Opening { opening } => {
-
+            DoorState::Opening { opening:_ } => {
             },
-            DoorState::Open { auto_close_timer } => {
-                
+            DoorState::Open { auto_close_timer:_ } => {
             },
         }
     }
@@ -720,16 +717,25 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
             },
             crate::DoorState::Open { auto_close_timer } => {
                 door_body.disabled = true;
+                let mut blocked = false;
                 for (other_e, other_p) in world.grid.query(p.truncate(), 1.0) {
                     if other_e != e {
-                        if let Ok(other_body) = bodies.get(other_e) {
-                            
+                        if let Ok(_) = bodies.get(other_e) {
+                            let a = 0.49;
+                            let ab1 = parry2d::bounding_volume::Aabb::from_half_extents([p.x, p.y].into(), [a, a].into());
+                            let ab2 = parry2d::bounding_volume::Aabb::from_half_extents([other_p.x, other_p.y].into(), [a, a].into());
+                            if ab1.intersects(&ab2) {
+                                blocked = true;
+                                break;
+                            }
                         }
                     }
                 }
-                auto_close_timer.tick(dt_secs);
-                if auto_close_timer.is_done() {
-                    door.state = DoorState::Closing { closing: Timer::start(door_timer) };
+                if !blocked {
+                    auto_close_timer.tick(dt_secs);
+                    if auto_close_timer.is_done() {
+                        door.state = DoorState::Closing { closing: Timer::start(door_timer) };
+                    }
                 }
             },
         }
