@@ -151,21 +151,64 @@ pub struct WolfInteract {
     
 }
 
-#[derive(Component, Default)]
-pub struct WolfDoor {
-    pub pos:Vec3,
-    pub is_open:bool,
-    pub is_opening:bool,
-    pub timer:f32,
+#[derive(Default, Clone)]
+pub struct Timer {
+    pub current:f32,
+    pub start:f32
 }
 
-impl WolfDoor {
-    pub fn open(&mut self) {
-        if !self.is_open && !self.is_opening {
-            self.is_opening = true;
-            if self.timer == 0.0 {
-                self.timer = 1.0;
+impl Timer {
+    pub fn start(secs:f32) -> Self {
+        Self {
+            current:secs,
+            start:secs
+        }
+    }
+
+    pub fn tick(&mut self, dt_sec:f32) {
+        if self.current > 0.0 {
+            self.current -= dt_sec;
+            if self.current <= 0.0 {
+                self.current = 0.0;
             }
         }
     }
+
+    pub fn is_done(&self) -> bool {
+        self.current == 0.0
+    }
+
+    pub fn alpha(&self) -> f32 {
+        let a = 1.0 - self.current / self.start;
+        a.clamp(0.0, 1.0)
+    }
+}
+
+pub enum DoorState {
+    Closed,
+    Closing {
+        closing:Timer
+    },
+    Opening {
+        opening:Timer
+    },
+    Open {
+        auto_close_timer:Timer
+    }
+}
+
+impl Default for DoorState {
+    fn default() -> Self {
+        Self::Closed
+    }
+}
+
+#[derive(Component, Default)]
+pub struct WolfDoor {
+    pub pos:Vec3,
+    pub state:DoorState
+}
+
+impl WolfDoor {
+   
 }

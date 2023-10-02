@@ -2,10 +2,10 @@ use std::f32::consts::PI;
 
 use crate::{
     assets::WolfMap,
-    components::{Spawn, WolfCamera, WolfUIFPSText},
+    components::{Spawn, WolfCamera, WolfUIFPSText, Timer},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
     WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite, WolfWorld, BODY_SHAPE_BALL,
-    BODY_SHAPE_CUBOID, WolfDoor,
+    BODY_SHAPE_CUBOID, WolfDoor, DoorState,
 };
 
 use bevy::{
@@ -152,31 +152,38 @@ pub fn spawn_system(
         }
 
         if we.has_class("door") {
-            let right = we.start_pos.as_uvec3().truncate() + UVec2::new(1, 0);
+            let right = we.start_pos.as_uvec3().truncate() + UVec2::X;
             let tiles = world.map.get(right);
             for tile in tiles {
                 if tile.has_class("block") {
-                    transform.look_to(Vec3::new(0.0, 1.0, 0.0), Vec3::Z)
+                    transform.look_to(Vec3::Y, Vec3::Z)
                 }
             }
 
-            entity.insert(PbrBundle {
-                mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
-                material: materials.add(StandardMaterial {
-                    alpha_mode: AlphaMode::Blend,
-                    perceptual_roughness: 1.0,
-                    metallic: 0.0,
-                    cull_mode: None,
-                    base_color_texture: image.and_then(|x| Some(ass.load(x))),
-                    unlit: true,
-                    ..Default::default()
-                }),
+            entity.insert(SpatialBundle {
                 transform,
                 ..Default::default()
             });
 
             entity.insert(WolfDoor {
                 ..Default::default()
+            });
+
+            entity.with_children(|mut builder|{
+                builder.spawn(PbrBundle {
+                    mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
+                    material: materials.add(StandardMaterial {
+                        alpha_mode: AlphaMode::Blend,
+                        perceptual_roughness: 1.0,
+                        metallic: 0.0,
+                        cull_mode: None,
+                        base_color_texture: image.and_then(|x| Some(ass.load(x))),
+                        unlit: true,
+                        ..Default::default()
+                    }),
+                    transform:Transform::from_xyz(0.0, 0.0, 0.0),
+                    ..Default::default()
+                });
             });
         }
 
@@ -667,25 +674,72 @@ pub fn body_system(
     }
 }
 
-fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody)>, time:Res<Time>) {
+fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(&mut WolfDoor, &mut WolfBody, &Children)>, time:Res<Time>, mut transforms:Query<(&mut Transform)>) {
+    let dt_secs = time.delta_seconds();
+    let door_timer = 0.75;
     for ev in interact_events.iter() {
-        let Ok((mut door, mut body)) = doors.get_mut(ev.entity) else { continue; };
-        door.open();
+        let Ok((mut door, mut body, _)) = doors.get_mut(ev.entity) else { continue; };
+        match &mut door.state {
+            DoorState::Closed => {
+                door.state = DoorState::Opening { opening: Timer::start(door_timer) };
+            },
+            DoorState::Closing { closing } => {
+                
+            },
+            DoorState::Opening { opening } => {
+
+            },
+            DoorState::Open { auto_close_timer } => {
+                
+            },
+        }
     }
 
-    for (mut door, mut body) in doors.iter_mut() {
-        if door.timer > 0.0 {
-            door.timer -= time.delta_seconds();
+    for (mut door, mut body, children) in doors.iter_mut() {
+        match &mut door.state {
+            crate::DoorState::Closed => {
+                body.disabled = false;
+            },
+            crate::DoorState::Closing { closing } => {
+                body.disabled = false;
+                closing.tick(dt_secs);
+                if closing.is_done() {
+                    door.state = DoorState::Closed;
+                }
+            },
+            crate::DoorState::Opening { opening } => {
+                body.disabled = false;
+                opening.tick(dt_secs);
+                if opening.is_done() {
+                    door.state = DoorState::Open { auto_close_timer: Timer::start(1.0) };
+                }
+            },
+            crate::DoorState::Open { auto_close_timer } => {
+                body.disabled = true;
+                auto_close_timer.tick(dt_secs);
+                if auto_close_timer.is_done() {
+                    door.state = DoorState::Closing { closing: Timer::start(0.5) };
+                }
+            },
         }
-        if door.timer <= 0.0 {
-            door.timer = 0.0;
-
-            if door.is_opening {
-                door.is_opening = false;
-                door.is_open = true;
+        for e in children.iter() {
+            if let Ok(mut transform) = transforms.get_mut(*e) {
+                match &door.state {
+                    crate::DoorState::Closed => {
+                        transform.translation.x = 0.0;
+                    },
+                    crate::DoorState::Closing { closing } => {
+                        transform.translation.x = 1.0 - closing.alpha();
+                    },
+                    crate::DoorState::Opening { opening } => {
+                        transform.translation.x = opening.alpha()
+                    },
+                    crate::DoorState::Open { auto_close_timer } => {
+                        transform.translation.x = 1.0;
+                    }
+                }
             }
         }
-        body.disabled = door.is_open;
     }
 }
 
