@@ -17,7 +17,7 @@ use bevy::{
     },
     utils::{petgraph::dot::Config, HashMap},
 };
-use parry2d::{bounding_volume::BoundingVolume, query::RayCast};
+use parry2d::{bounding_volume::BoundingVolume, query::RayCast, na::ComplexField};
 
 pub fn startup_system(
     mut commands: Commands,
@@ -808,10 +808,34 @@ fn door_system(
     }
 }
 
-pub fn pushwall_system(
+pub fn push_system(
     mut interact_events: EventReader<WolfInteractEvent>,
-    query: Query<&(WolfPush)>,
+    mut pushes: Query<(Entity, &mut WolfPush)>,
+    mut transforms:Query<&mut Transform>,
+    time: Res<Time>
 ) {
+    for ev in interact_events.iter() {
+        let interactor = ev.interactor;
+        let Ok(interactor_transform) = transforms.get(interactor) else {continue;};
+        let Ok(push_transform) = transforms.get(ev.entity) else {continue;};
+        let e = ev.entity;
+        let Ok((_, mut push)) = pushes.get_mut(e) else { continue; };
+
+        let p1 = push_transform.translation.truncate().as_ivec2();
+        let p2 = interactor_transform.translation.truncate().as_ivec2();
+        let v = p1 - p2;
+        let v = v.as_vec2();
+        if v.length() > 0.0 {
+            push.vel = v.extend(0.0);
+        }
+    }
+
+    for (e, push) in pushes.iter() {
+        if push.vel.length() > 0.0 {
+            let Ok(mut t) = transforms.get_mut( e) else { continue;};
+            t.translation += push.vel * time.delta_seconds();
+        }
+    }
 }
 
 pub fn build_systems(app: &mut App) {
@@ -824,9 +848,9 @@ pub fn build_systems(app: &mut App) {
             update_prev_system,
             spatial_hash_system,
             camera_system,
-            pushwall_system,
-            body_system,
             interactor_system,
+            push_system,
+            body_system,
             door_system,
             sprite_system,
             ui_system,

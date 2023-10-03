@@ -215,4 +215,5 @@ impl WolfDoor {
 
 #[derive(Component, Default)]
 pub struct WolfPush {
+    pub vel:Vec3
 }
