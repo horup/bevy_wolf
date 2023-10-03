@@ -5,7 +5,7 @@ use crate::{
     components::{Spawn, WolfCamera, WolfUIFPSText, Timer},
     AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
     WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite, WolfWorld, BODY_SHAPE_BALL,
-    BODY_SHAPE_CUBOID, WolfDoor, DoorState,
+    BODY_SHAPE_CUBOID, WolfDoor, DoorState, PushWall,
 };
 
 use bevy::{
@@ -204,6 +204,16 @@ pub fn spawn_system(
             entity.insert(WolfInteract {
                 ..Default::default()
             });
+        }
+
+        if we.has_class("push") {
+            let index = we.start_pos.as_uvec3().truncate();
+            for e in world.map.get(index) {
+                if e.has_class("block") {
+                    
+                }
+            }
+                
         }
     }
 }
@@ -760,6 +770,10 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
     }
 }
 
+pub fn pushwall_system(mut interact_events:EventReader<WolfInteractEvent>, query:Query<&(PushWall)>) {
+
+}
+
 pub fn build_systems(app: &mut App) {
     app.add_systems(Startup, startup_system);
     app.add_systems(PreUpdate, (load_map_system).chain());
@@ -770,6 +784,7 @@ pub fn build_systems(app: &mut App) {
             update_prev_system,
             spatial_hash_system,
             camera_system,
+            pushwall_system,
             body_system,
             interactor_system,
             door_system, 

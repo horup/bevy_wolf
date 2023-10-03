@@ -212,3 +212,7 @@ pub struct WolfDoor {
 impl WolfDoor {
    
 }
+
+#[derive(Component, Default)]
+pub struct PushWall {
+}
