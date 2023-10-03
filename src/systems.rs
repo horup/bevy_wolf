@@ -450,7 +450,7 @@ pub fn instance_manager_spawn_system(
 
 pub fn instance_manage_render_system(
     mut commands: Commands,
-    mut instances: Query<(&mut WolfInstance<StandardMaterial>, &Transform)>,
+    mut instances: Query<(&mut WolfInstance<StandardMaterial>, &mut Transform)>,
     mut instance_managers: Query<(
         Entity,
         &mut WolfInstanceManager<StandardMaterial>,
@@ -461,9 +461,12 @@ pub fn instance_manage_render_system(
 ) {
     for (entity, mut instance_manager, mesh, mut aabb) in instance_managers.iter_mut() {
         let mut count = 0;
-        for (mut instance, _) in instances.iter_mut() {
+        for (mut instance, t) in instances.iter_mut() {
             if instance_manager.instance == *instance {
                 count += 1;
+                if t.is_changed() {
+                    instance.request_redraw = true;
+                }
                 if instance.request_redraw {
                     instance_manager.request_redraw = true;
                     instance.request_redraw = false;
@@ -574,7 +577,7 @@ pub fn spatial_hash_system(
     }
 }
 
-pub fn update_prev_system(mut transforms: Query<(&Transform, &mut Prev<Transform>)>) {
+pub fn prev_system(mut transforms: Query<(&Transform, &mut Prev<Transform>)>) {
     for (current, mut prev) in transforms.iter_mut() {
         prev.component = *current;
     }
@@ -845,7 +848,7 @@ pub fn build_systems(app: &mut App) {
         Update,
         (
             spawn_system,
-            update_prev_system,
+            prev_system,
             spatial_hash_system,
             camera_system,
             interactor_system,
