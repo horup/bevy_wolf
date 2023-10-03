@@ -586,11 +586,10 @@ pub fn prev_system(mut transforms: Query<(&Transform, &mut Prev<Transform>)>) {
 pub fn body_system(
     bodies: Query<(Entity, &WolfBody)>,
     mut transforms: Query<&mut Transform>,
-    mut prev_transforms: Query<&mut Prev<Transform>>,
+    mut prev_transforms: Query<&Prev<Transform>>,
     mut world: ResMut<WolfWorld>,
 ) {
     let mut contacts = Vec::with_capacity(8);
-    let max_r = 0.5;
     for (entity, body) in bodies.iter() {
         let Ok(transform) = transforms.get(entity) else {
             continue;
@@ -686,12 +685,7 @@ pub fn body_system(
         };
 
         transform.translation = new_translation.extend(prev_translate.z);
-
-        let Ok(mut prev_transform) = prev_transforms.get_mut(entity) else {
-            continue;
-        };
         let new_translation = new_translation.extend(prev_translate.z);
-        prev_transform.translation = new_translation;
 
         world
             .grid
@@ -827,9 +821,11 @@ pub fn push_system(
         let p1 = push_transform.translation.truncate().as_ivec2();
         let p2 = interactor_transform.translation.truncate().as_ivec2();
         let v = p1 - p2;
-        let v = v.as_vec2();
-        if v.length() > 0.0 {
-            push.vel = v.extend(0.0);
+        if v.x == 0 || v.y == 0 {
+            let v = v.as_vec2();
+            if v.length() > 0.0 {
+                push.vel = v.extend(0.0);
+            }
         }
     }
 
@@ -837,6 +833,17 @@ pub fn push_system(
         if push.vel.length() > 0.0 {
             let Ok(mut t) = transforms.get_mut( e) else { continue;};
             t.translation += push.vel * time.delta_seconds();
+        }
+    }
+}
+
+pub fn post_push_system(pushes: Query<(Entity, &mut WolfPush, &Prev<Transform>, &Transform)>, mut commands: Commands) {
+    for (e, push, prev_transform, transform) in pushes.iter() {
+        if push.vel.length() > 0.0 {
+            let change = transform.translation - prev_transform.translation;
+            if change.length() <= 0.0 {
+                commands.entity(e).remove::<WolfPush>();
+            }
         }
     }
 }
@@ -854,6 +861,7 @@ pub fn build_systems(app: &mut App) {
             interactor_system,
             push_system,
             body_system,
+            post_push_system,
             door_system,
             sprite_system,
             ui_system,
