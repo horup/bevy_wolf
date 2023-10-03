@@ -2,10 +2,10 @@ use std::f32::consts::PI;
 
 use crate::{
     assets::WolfMap,
-    components::{Spawn, WolfCamera, WolfUIFPSText, Timer},
-    AssetMap, Prev, WolfAssets, WolfBody, WolfConfig, WolfEntity, WolfEntityRef, WolfInstance,
-    WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite, WolfWorld, BODY_SHAPE_BALL,
-    BODY_SHAPE_CUBOID, WolfDoor, DoorState, PushWall,
+    components::{Spawn, Timer, WolfCamera, WolfUIFPSText},
+    AssetMap, DoorState, Prev, WolfPush, WolfAssets, WolfBody, WolfConfig, WolfDoor, WolfEntity,
+    WolfEntityRef, WolfInstance, WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite,
+    WolfWorld, BODY_SHAPE_BALL, BODY_SHAPE_CUBOID,
 };
 
 use bevy::{
@@ -17,7 +17,7 @@ use bevy::{
     },
     utils::{petgraph::dot::Config, HashMap},
 };
-use parry2d::{query::RayCast, bounding_volume::BoundingVolume};
+use parry2d::{bounding_volume::BoundingVolume, query::RayCast};
 
 pub fn startup_system(
     mut commands: Commands,
@@ -169,7 +169,7 @@ pub fn spawn_system(
                 ..Default::default()
             });
 
-            entity.with_children(|mut builder|{
+            entity.with_children(|mut builder| {
                 builder.spawn(PbrBundle {
                     mesh: assets.sprite_meshes.get(1, 1, &mut meshes).index(0),
                     material: materials.add(StandardMaterial {
@@ -181,7 +181,7 @@ pub fn spawn_system(
                         unlit: true,
                         ..Default::default()
                     }),
-                    transform:Transform::from_xyz(0.0, 0.0, 0.0),
+                    transform: Transform::from_xyz(0.0, 0.0, 0.0),
                     ..Default::default()
                 });
             });
@@ -207,13 +207,17 @@ pub fn spawn_system(
         }
 
         if we.has_class("push") {
-            let index = we.start_pos.as_uvec3().truncate();
-            for e in world.map.get(index) {
-                if e.has_class("block") {
-                    
+            for (other_e, we2) in spawns
+                .iter()
+                .filter(|(_, we2)| we2.start_pos == we.start_pos)
+            {
+                if we2.has_class("block") {
+                    commands
+                        .entity(other_e)
+                        .insert(WolfInteract::default())
+                        .insert(WolfPush::default());
                 }
             }
-                
         }
     }
 }
@@ -380,17 +384,25 @@ fn interactor_system(
 ) {
     for (camera_entity, transform, we) in cameras.iter_mut() {
         if keys.just_pressed(config.interaction_key) {
-            let v = transform.forward();//transform.rotation * Vec3::new(1.0, 0.0, 0.0);
+            let v = transform.forward(); //transform.rotation * Vec3::new(1.0, 0.0, 0.0);
             let ray = parry2d::query::Ray::new(
                 [transform.translation.x, transform.translation.y].into(),
                 [v.x, v.y].into(),
             );
             let l = 1.0;
-            for (e, p) in world.grid.query_around(transform.translation.truncate(), 2.0) {
-                let Ok((_, wb, _wi)) = interacts.get(e) else { continue; };
+            for (e, p) in world
+                .grid
+                .query_around(transform.translation.truncate(), 2.0)
+            {
+                let Ok((_, wb, _wi)) = interacts.get(e) else {
+                    continue;
+                };
                 let s = parry2d::shape::Cuboid::new([wb.radius, wb.radius].into());
                 if let Some(_) = s.cast_ray_and_get_normal(&[p.x, p.y].into(), &ray, l, true) {
-                    writer.send(WolfInteractEvent { interactor: camera_entity, entity: e });
+                    writer.send(WolfInteractEvent {
+                        interactor: camera_entity,
+                        entity: e,
+                    });
                 }
             }
         }
@@ -684,47 +696,63 @@ pub fn body_system(
     }
 }
 
-fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Query<(Entity, &mut WolfDoor, &Children)>, time:Res<Time>, mut transforms:Query<(&mut Transform)>, mut bodies:Query<&mut WolfBody>, world:Res<WolfWorld>) {
+fn door_system(
+    mut interact_events: EventReader<WolfInteractEvent>,
+    mut doors: Query<(Entity, &mut WolfDoor, &Children)>,
+    time: Res<Time>,
+    mut transforms: Query<(&mut Transform)>,
+    mut bodies: Query<&mut WolfBody>,
+    world: Res<WolfWorld>,
+) {
     let dt_secs = time.delta_seconds();
     let door_timer = 0.5;
     let auto_close_timer = 3.0;
     for ev in interact_events.iter() {
-        let Ok((_, mut door, _)) = doors.get_mut(ev.entity) else { continue; };
+        let Ok((_, mut door, _)) = doors.get_mut(ev.entity) else {
+            continue;
+        };
         match &mut door.state {
             DoorState::Closed => {
-                door.state = DoorState::Opening { opening: Timer::start(door_timer) };
-            },
-            DoorState::Closing { closing:_ } => {
-            },
-            DoorState::Opening { opening:_ } => {
-            },
-            DoorState::Open { auto_close_timer:_ } => {
-            },
+                door.state = DoorState::Opening {
+                    opening: Timer::start(door_timer),
+                };
+            }
+            DoorState::Closing { closing: _ } => {}
+            DoorState::Opening { opening: _ } => {}
+            DoorState::Open {
+                auto_close_timer: _,
+            } => {}
         }
     }
 
     for (e, mut door, children) in doors.iter_mut() {
-        let Ok(t) = transforms.get(e) else { continue; };
-        let Ok(mut door_body) = bodies.get_mut(e) else { continue; };
+        let Ok(t) = transforms.get(e) else {
+            continue;
+        };
+        let Ok(mut door_body) = bodies.get_mut(e) else {
+            continue;
+        };
         let p = t.translation.clone();
         match &mut door.state {
             crate::DoorState::Closed => {
                 door_body.disabled = false;
-            },
+            }
             crate::DoorState::Closing { closing } => {
                 door_body.disabled = false;
                 closing.tick(dt_secs);
                 if closing.is_done() {
                     door.state = DoorState::Closed;
                 }
-            },
+            }
             crate::DoorState::Opening { opening } => {
                 door_body.disabled = false;
                 opening.tick(dt_secs);
                 if opening.is_done() {
-                    door.state = DoorState::Open { auto_close_timer: Timer::start(auto_close_timer) };
+                    door.state = DoorState::Open {
+                        auto_close_timer: Timer::start(auto_close_timer),
+                    };
                 }
-            },
+            }
             crate::DoorState::Open { auto_close_timer } => {
                 door_body.disabled = true;
                 let mut blocked = false;
@@ -732,8 +760,14 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
                     if other_e != e {
                         if let Ok(_) = bodies.get(other_e) {
                             let a = 0.49;
-                            let ab1 = parry2d::bounding_volume::Aabb::from_half_extents([p.x, p.y].into(), [a, a].into());
-                            let ab2 = parry2d::bounding_volume::Aabb::from_half_extents([other_p.x, other_p.y].into(), [a, a].into());
+                            let ab1 = parry2d::bounding_volume::Aabb::from_half_extents(
+                                [p.x, p.y].into(),
+                                [a, a].into(),
+                            );
+                            let ab2 = parry2d::bounding_volume::Aabb::from_half_extents(
+                                [other_p.x, other_p.y].into(),
+                                [a, a].into(),
+                            );
                             if ab1.intersects(&ab2) {
                                 blocked = true;
                                 break;
@@ -744,24 +778,28 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
                 if !blocked {
                     auto_close_timer.tick(dt_secs);
                     if auto_close_timer.is_done() {
-                        door.state = DoorState::Closing { closing: Timer::start(door_timer) };
+                        door.state = DoorState::Closing {
+                            closing: Timer::start(door_timer),
+                        };
                     }
                 }
-            },
+            }
         }
         for e in children.iter() {
             if let Ok(mut transform) = transforms.get_mut(*e) {
                 match &door.state {
                     crate::DoorState::Closed => {
                         transform.translation.x = 0.0;
-                    },
+                    }
                     crate::DoorState::Closing { closing } => {
                         transform.translation.x = 1.0 - closing.alpha();
-                    },
+                    }
                     crate::DoorState::Opening { opening } => {
                         transform.translation.x = opening.alpha()
-                    },
-                    crate::DoorState::Open { auto_close_timer:_} => {
+                    }
+                    crate::DoorState::Open {
+                        auto_close_timer: _,
+                    } => {
                         transform.translation.x = 1.0;
                     }
                 }
@@ -770,8 +808,10 @@ fn door_system(mut interact_events:EventReader<WolfInteractEvent>, mut doors:Que
     }
 }
 
-pub fn pushwall_system(mut interact_events:EventReader<WolfInteractEvent>, query:Query<&(PushWall)>) {
-
+pub fn pushwall_system(
+    mut interact_events: EventReader<WolfInteractEvent>,
+    query: Query<&(WolfPush)>,
+) {
 }
 
 pub fn build_systems(app: &mut App) {
@@ -787,7 +827,7 @@ pub fn build_systems(app: &mut App) {
             pushwall_system,
             body_system,
             interactor_system,
-            door_system, 
+            door_system,
             sprite_system,
             ui_system,
             spatial_hash_system,
