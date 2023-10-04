@@ -5,7 +5,7 @@ use crate::{
     components::{Spawn, Timer, WolfCamera, WolfUIFPSText},
     AssetMap, DoorState, Prev, WolfPush, WolfAssets, WolfBody, WolfConfig, WolfDoor, WolfEntity,
     WolfEntityRef, WolfInstance, WolfInstanceManager, WolfInteract, WolfInteractEvent, WolfSprite,
-    WolfWorld, BODY_SHAPE_BALL, BODY_SHAPE_CUBOID,
+    WolfWorld, BODY_SHAPE_BALL, BODY_SHAPE_CUBOID, WolfDynamicBlock, WolfNorth, WolfSouth, WolfWest,
 };
 
 use bevy::{
@@ -15,7 +15,7 @@ use bevy::{
         mesh::{Indices, VertexAttributeValues},
         primitives::Aabb,
     },
-    utils::{petgraph::dot::Config, HashMap},
+    utils::{HashMap},
 };
 use parry2d::{bounding_volume::BoundingVolume, query::RayCast, na::ComplexField};
 
@@ -109,7 +109,46 @@ pub fn spawn_system(
                         material
                     }
                 };
+/*
+                let flat = assets.sprite_meshes.get(1, 1, &mut meshes).index(0);
+                entity.insert(WolfDynamicBlock {
+                    images:[image.to_string(), image.to_string(), image.to_string(), image.to_string()]
+                });
 
+                let dynamic_block = WolfDynamicBlock {
+                    images:[image.to_string(), image.to_string(), image.to_string(), image.to_string()]
+                };
+
+                let s = 0.5;
+                entity.with_children(|builder| {
+                    builder.spawn(PbrBundle {
+                        mesh:flat.clone(),
+                        material:material.clone(), 
+                        transform:Transform::from_xyz(0.0, 0.0, -s).with_rotation(Quat::from_rotation_y(PI)),
+                        ..Default::default()
+                    }).insert(WolfNorth);
+
+                    builder.spawn(PbrBundle {
+                        mesh:flat.clone(),
+                        transform:Transform::from_xyz(0.0, 0.0, s),
+                        material:material.clone(), 
+                        ..Default::default()
+                    }).insert(WolfSouth);
+
+                    builder.spawn(PbrBundle {
+                        mesh:flat.clone(),
+                        transform:Transform::from_xyz(-s, 0.0, 0.0).with_rotation(Quat::from_rotation_y(-PI/2.0)),
+                        material:material.clone(), 
+                        ..Default::default()
+                    }).insert(WolfWest);
+
+                    builder.spawn(PbrBundle {
+                        mesh:flat.clone(),
+                        transform:Transform::from_xyz(s, 0.0, 0.0).with_rotation(Quat::from_rotation_y(PI/2.0)),
+                        material:material.clone(), 
+                        ..Default::default()
+                    }).insert(WolfWest);
+                });*/
                 entity
                     .insert(WolfInstance {
                         mesh: block_mesh.clone(),

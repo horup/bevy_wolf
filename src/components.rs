@@ -217,3 +217,20 @@ impl WolfDoor {
 pub struct WolfPush {
     pub vel:Vec3
 }
+
+pub const NORTH:usize = 0;
+pub const SOUTH:usize = 1;
+pub const WEST:usize = 2;
+pub const EAST:usize = 3;
+#[derive(Component, Default)]
+pub struct WolfDynamicBlock {
+    pub images:[String;4]
+}
+#[derive(Component, Default)]
+pub struct WolfNorth;
+#[derive(Component, Default)]
+pub struct WolfSouth;
+#[derive(Component, Default)]
+pub struct WolfWest;
+#[derive(Component, Default)]
+pub struct WolfEast;
