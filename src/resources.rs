@@ -1,7 +1,5 @@
 use bevy::{
-    prelude::*,
-    reflect::{TypePath, TypeUuid},
-    utils::HashMap, render::mesh::Indices,
+    prelude::*, render::{mesh::Indices, render_asset::RenderAssetUsages}, utils::HashMap
 };
 
 use crate::WolfMap;
@@ -64,11 +62,11 @@ impl WolfWorld {
     }
 }
 
-pub struct AssetMap<T: TypeUuid + TypePath + Send + Sync> {
+pub struct AssetMap<T : Asset + TypePath + Send + Sync> {
     assets: HashMap<String, Handle<T>>,
 }
 
-impl<T: TypeUuid + TypePath + Send + Sync> Default for AssetMap<T> {
+impl<T: Asset + TypePath + Send + Sync> Default for AssetMap<T> {
     fn default() -> Self {
         Self {
             assets: Default::default(),
@@ -76,7 +74,7 @@ impl<T: TypeUuid + TypePath + Send + Sync> Default for AssetMap<T> {
     }
 }
 
-impl<T: TypeUuid + TypePath + Send + Sync> AssetMap<T> {
+impl<T: Asset + TypePath + Send + Sync> AssetMap<T> {
     pub fn insert(&mut self, name: &str, handle: Handle<T>) {
         self.assets.insert(name.to_string(), handle);
     }
@@ -111,7 +109,7 @@ impl WolfAtlaseMeshes {
             let mut meshes = Vec::new();
             for y in 0..atlas_height {
                 for x in 0..atlas_width {
-                    let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList);
+                    let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::TriangleList, RenderAssetUsages::default());
                     let s = 0.5;
                     let a = 1.0 / 1024.0;
                     let w = 1.0 / atlas_width as f32;
@@ -119,7 +117,7 @@ impl WolfAtlaseMeshes {
                     let u = x as f32 * w;
                     let v = y as f32 * h;
                     
-                    mesh.set_indices(Some(Indices::U16(vec![0, 1, 2, 0, 2, 3])));
+                    mesh.insert_indices(Indices::U16(vec![0, 1, 2, 0, 2, 3]));
                     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vec![[-s, s, 0.0], [-s, -s, 0.0], [s, -s, 0.0], [s, s, 0.0]]);
                     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]]);
                     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[u + a, v + a], [u + a, v+h - a], [u+w - a, v+h - a], [u+w - a, v + a]]);
@@ -162,10 +160,10 @@ impl Default for WolfConfig {
     fn default() -> Self {
         Self {
             interaction_key: KeyCode::Space,
-            forward_key: KeyCode::W,
-            backward_key: KeyCode::S,
-            strife_left_key: KeyCode::A,
-            strife_right_key: KeyCode::D,
+            forward_key: KeyCode::KeyW,
+            backward_key: KeyCode::KeyS,
+            strife_left_key: KeyCode::KeyA,
+            strife_right_key: KeyCode::KeyD,
             turn_speed:0.01,
             show_dev:false
         }

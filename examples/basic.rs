@@ -1,12 +1,12 @@
 use std::process::exit;
 
-use bevy::{prelude::*, render::{texture::ImageSampler, settings::{WgpuSettings, Backends}, RenderPlugin}, window::{PresentMode, Cursor, CursorGrabMode}};
+use bevy::{input::keyboard::KeyboardInput, prelude::*, render::{settings::{Backends, WgpuSettings}, texture::{ImageSampler, ImageSamplerDescriptor}, RenderPlugin}, window::{Cursor, CursorGrabMode, PresentMode}};
 use bevy_wolf::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin {
-            default_sampler:ImageSampler::nearest_descriptor(),
+            default_sampler:ImageSamplerDescriptor::nearest(),
             ..Default::default()
         }).set(WindowPlugin {
             primary_window:Some(Window {
@@ -20,10 +20,10 @@ fn main() {
             }),
             ..Default::default()
         }).set(RenderPlugin {
-            wgpu_settings:WgpuSettings {
+           /* wgpu_settings:WgpuSettings {
                 backends:Some(Backends::VULKAN), // not sure why needed to force to vulkan
                 ..Default::default()
-            },
+            },*/
             ..Default::default()
         }))
         .add_plugins(WolfPlugin)
@@ -32,15 +32,14 @@ fn main() {
         .run();
 }
 
-fn test_system(mut q:Query<&mut Transform, With<WolfSprite>>, time:Res<Time>, mut config:ResMut<WolfConfig>, keys:Res<Input<KeyCode>>, world:Res<WolfWorld>){
+fn test_system(mut q:Query<&mut Transform, With<WolfSprite>>, time:Res<Time>, mut config:ResMut<WolfConfig>, keys:Res<ButtonInput<KeyCode>>, world:Res<WolfWorld>){
     if keys.just_pressed(KeyCode::F9) {
         config.show_dev = !config.show_dev;
     }
-    let mut hits = 0;
 }
 
-fn input_system(keys:Res<Input<KeyCode>>, mut windows:Query<&mut Window>) {
-    let mut window = windows.single_mut();
+fn input_system(keys:Res<ButtonInput<KeyCode>>, mut windows:Query<&mut Window>) {
+    let window = windows.single_mut();
     if keys.just_pressed(KeyCode::Escape) {
         //window.cursor.grab_mode = CursorGrabMode::None;
         //window.cursor.visible = true;

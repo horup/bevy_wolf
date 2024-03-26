@@ -31,6 +31,13 @@ pub fn startup_system(
         .meshes
         .insert("floor", ass.load("meshes/floor.gltf#Mesh0/Primitive0"));
 
+    commands.spawn(Camera2dBundle {
+        camera: Camera {
+            order: 1,
+            ..Default::default()
+        },
+        ..Default::default()
+    });
     commands
         .spawn(TextBundle {
             text: Text::from_section(
@@ -95,60 +102,13 @@ pub fn spawn_system(
 
         if we.has_class("block") {
             if let Some(image) = image {
-                let material = match existing_materials.get(&Some(ass.load(image))) {
-                    Some(h) => materials.get_handle(*h),
-                    None => {
-                        let material = materials.add(StandardMaterial {
-                            perceptual_roughness: 1.0,
-                            metallic: 0.0,
-                            base_color_texture: Some(ass.load(image)),
-                            unlit: true,
-                            ..Default::default()
-                        });
-                        existing_materials.insert(Some(ass.load(image)), material.id());
-                        material
-                    }
-                };
-/*
-                let flat = assets.sprite_meshes.get(1, 1, &mut meshes).index(0);
-                entity.insert(WolfDynamicBlock {
-                    images:[image.to_string(), image.to_string(), image.to_string(), image.to_string()]
+                let material = materials.add(StandardMaterial {
+                    perceptual_roughness: 1.0,
+                    metallic: 0.0,
+                    base_color_texture: Some(ass.load(image)),
+                    unlit: true,
+                    ..Default::default()
                 });
-
-                let dynamic_block = WolfDynamicBlock {
-                    images:[image.to_string(), image.to_string(), image.to_string(), image.to_string()]
-                };
-
-                let s = 0.5;
-                entity.with_children(|builder| {
-                    builder.spawn(PbrBundle {
-                        mesh:flat.clone(),
-                        material:material.clone(), 
-                        transform:Transform::from_xyz(0.0, 0.0, -s).with_rotation(Quat::from_rotation_y(PI)),
-                        ..Default::default()
-                    }).insert(WolfNorth);
-
-                    builder.spawn(PbrBundle {
-                        mesh:flat.clone(),
-                        transform:Transform::from_xyz(0.0, 0.0, s),
-                        material:material.clone(), 
-                        ..Default::default()
-                    }).insert(WolfSouth);
-
-                    builder.spawn(PbrBundle {
-                        mesh:flat.clone(),
-                        transform:Transform::from_xyz(-s, 0.0, 0.0).with_rotation(Quat::from_rotation_y(-PI/2.0)),
-                        material:material.clone(), 
-                        ..Default::default()
-                    }).insert(WolfWest);
-
-                    builder.spawn(PbrBundle {
-                        mesh:flat.clone(),
-                        transform:Transform::from_xyz(s, 0.0, 0.0).with_rotation(Quat::from_rotation_y(PI/2.0)),
-                        material:material.clone(), 
-                        ..Default::default()
-                    }).insert(WolfWest);
-                });*/
                 entity
                     .insert(WolfInstance {
                         mesh: block_mesh.clone(),
@@ -364,7 +324,7 @@ fn load_map_system(
 
 pub fn camera_system(
     mut cameras: Query<(&mut Transform, &mut WolfEntity), With<WolfCamera>>,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     config: Res<WolfConfig>,
     mut mouse_motion: EventReader<MouseMotion>,
@@ -374,7 +334,7 @@ pub fn camera_system(
         let up = Vec3::new(0.0, 0.0, 1.0);
 
         // turn
-        for ev in mouse_motion.iter() {
+        for ev in mouse_motion.read() {
             transform.rotate_z(-ev.delta.x * config.turn_speed);
             let forward = transform.forward().normalize_or_zero();
             let side = forward.cross(up);
@@ -416,7 +376,7 @@ pub fn camera_system(
 fn interactor_system(
     mut cameras: Query<(Entity, &mut Transform, &mut WolfEntity), With<WolfCamera>>,
     interacts: Query<(&Transform, &WolfBody, &WolfInteract), Without<WolfCamera>>,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     config: Res<WolfConfig>,
     world: Res<WolfWorld>,
     mut writer: EventWriter<WolfInteractEvent>,
@@ -570,7 +530,7 @@ pub fn instance_manage_render_system(
             mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, new_positions);
             mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, new_uvs);
             mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, new_normals);
-            mesh.set_indices(Some(Indices::U32(indicies)));
+            mesh.insert_indices(Indices::U32(indicies));
 
             if let Some(new_aabb) = mesh.compute_aabb() {
                 *aabb = new_aabb;
@@ -743,7 +703,7 @@ fn door_system(
     let dt_secs = time.delta_seconds();
     let door_timer = 0.5;
     let auto_close_timer = 3.0;
-    for ev in interact_events.iter() {
+    for ev in interact_events.read() {
         let Ok((_, mut door, _)) = doors.get_mut(ev.entity) else {
             continue;
         };
@@ -850,7 +810,7 @@ pub fn push_system(
     mut transforms:Query<&mut Transform>,
     time: Res<Time>
 ) {
-    for ev in interact_events.iter() {
+    for ev in interact_events.read() {
         let interactor = ev.interactor;
         let Ok(interactor_transform) = transforms.get(interactor) else {continue;};
         let Ok(push_transform) = transforms.get(ev.entity) else {continue;};
