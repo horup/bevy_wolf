@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use bevy::{
     prelude::*, render::{mesh::Indices, render_asset::RenderAssetUsages}, utils::HashMap
 };
@@ -53,6 +55,7 @@ pub struct WolfWorld {
     pub updates:u64,
     pub map: WolfMap,
     pub grid: WolfGrid,
+    pub last_ui_update:f32,
     pub(crate) map_handle: Option<Handle<WolfMap>>,
 }
 

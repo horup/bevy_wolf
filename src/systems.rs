@@ -41,7 +41,7 @@ pub fn startup_system(
     commands
         .spawn(TextBundle {
             text: Text::from_section(
-                "Hello World",
+                "---",
                 TextStyle {
                     font_size: 24.0,
                     color: Color::RED,
@@ -59,7 +59,10 @@ fn ui_system(
     mut wolf_world: ResMut<WolfWorld>,
 ) {
     wolf_world.updates += 1;
-    q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
+    if wolf_world.last_ui_update + 0.33 < time.elapsed_seconds() {
+        wolf_world.last_ui_update = time.elapsed_seconds();
+        q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
+    }
 }
 
 pub fn spawn_system(
