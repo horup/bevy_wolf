@@ -100,14 +100,22 @@ pub fn spawn_system(
 
         if we.has_class("block") {
             if let Some(image) = image {
-
-               /* let material = materials.add(StandardMaterial {
-                    perceptual_roughness: 1.0,
-                    metallic: 0.0,
-                    base_color_texture: Some(ass.load(image)),
-                    unlit: true,
-                    ..Default::default()
-                });
+                let img_handle = ass.load(image);
+                let material = match assets.standard_materials.get(&image) {
+                    Some(material) => material,
+                    None => {
+                        let material = materials.add(StandardMaterial {
+                            perceptual_roughness: 1.0,
+                            metallic: 0.0,
+                            base_color_texture: Some(img_handle),
+                            unlit: true,
+                            ..Default::default()
+                        });
+                        assets.standard_materials.insert(&image, material.clone());
+                        material
+                    },
+                };
+               
                 entity
                     .insert(WolfInstance {
                         mesh: block_mesh.clone(),
@@ -115,7 +123,7 @@ pub fn spawn_system(
                         request_redraw: true,
                         ..Default::default()
                     })
-                    .insert(transform);*/
+                    .insert(transform);
             }
         }
 
