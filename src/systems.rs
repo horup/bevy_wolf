@@ -59,9 +59,7 @@ fn ui_system(
     mut wolf_world: ResMut<WolfWorld>,
 ) {
     wolf_world.updates += 1;
-    if wolf_world.updates % 100 == 0 {
-        q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
-    }
+    q.single_mut().sections[0].value = format!("{:.0}", 1.0 / time.delta_seconds());
 }
 
 pub fn spawn_system(
@@ -102,7 +100,8 @@ pub fn spawn_system(
 
         if we.has_class("block") {
             if let Some(image) = image {
-                let material = materials.add(StandardMaterial {
+
+               /* let material = materials.add(StandardMaterial {
                     perceptual_roughness: 1.0,
                     metallic: 0.0,
                     base_color_texture: Some(ass.load(image)),
@@ -116,7 +115,7 @@ pub fn spawn_system(
                         request_redraw: true,
                         ..Default::default()
                     })
-                    .insert(transform);
+                    .insert(transform);*/
             }
         }
 
